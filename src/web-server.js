@@ -212,8 +212,6 @@ class PerformanceMonitorServer {
                 
                 if (type === 'pagespeed') {
                     targetFile = files.find(file => file.includes(sessionId) && file.includes('pagespeed-report') && file.endsWith('.html'));
-                } else if (type === 'gemini') {
-                    targetFile = files.find(file => file.includes(sessionId) && file.includes('gemini-ai-analysis') && file.endsWith('.html'));
                 } else {
                     // Default to mercury performance report
                     targetFile = files.find(file => file.includes(sessionId) && file.includes('mercury-performance-report') && file.endsWith('.html'));

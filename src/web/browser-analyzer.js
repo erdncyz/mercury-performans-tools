@@ -4,8 +4,6 @@ const path = require('path');
 const LighthouseCIReport = require('./lighthouse-ci-report');
 const PageSpeedAnalyzer = require('./pagespeed-analyzer');
 const PageSpeedReport = require('./pagespeed-report');
-const GeminiAnalyzer = require('./gemini-analyzer');
-const GeminiReport = require('./gemini-report');
 
 class BrowserAnalyzer {
     constructor() {
@@ -14,8 +12,6 @@ class BrowserAnalyzer {
         this.lighthouseCIReport = new LighthouseCIReport();
         this.pageSpeedAnalyzer = new PageSpeedAnalyzer();
         this.pageSpeedReport = new PageSpeedReport();
-        this.geminiAnalyzer = new GeminiAnalyzer();
-        this.geminiReport = new GeminiReport();
     }
 
     async startAnalysis(url, browserType) {
@@ -754,23 +750,11 @@ class BrowserAnalyzer {
                 console.warn('PageSpeed Insights raporu oluşturulamadı:', error.message);
             }
 
-            // Gemini AI analizi ve raporu oluştur
-            let geminiReportPath = null;
-            try {
-                console.log('🤖 Gemini AI analizi başlatılıyor...');
-                const geminiAnalysis = await this.geminiAnalyzer.analyzeReport(pageSpeedData || reportData);
-                geminiReportPath = await this.geminiReport.generateHTMLReport(geminiAnalysis, reportData);
-                console.log('✅ Gemini AI HTML raporu oluşturuldu:', geminiReportPath);
-            } catch (error) {
-                console.warn('❌ Gemini AI raporu oluşturulamadı:', error.message);
-            }
-
             console.log('Mercury Performance HTML raporu oluşturuldu:', htmlReportPath);
             
             return {
                 html: htmlReportPath,
-                pagespeed: pageSpeedReportPath,
-                gemini: geminiReportPath
+                pagespeed: pageSpeedReportPath
             };
 
         } catch (error) {

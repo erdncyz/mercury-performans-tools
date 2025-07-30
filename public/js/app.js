@@ -215,11 +215,6 @@ function stopAnalysis() {
                                 <i class="fas fa-chart-line"></i> Download PageSpeed Report
                             </button>
                             ` : ''}
-                            ${reportData.gemini ? `
-                            <button class="btn btn-info" onclick="downloadReport('${reportData.sessionId}', 'gemini')">
-                                <i class="fas fa-robot"></i> Download AI Analysis Report
-                            </button>
-                            ` : ''}
                         </div>
                     </div>
                 `;

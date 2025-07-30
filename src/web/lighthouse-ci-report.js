@@ -47,17 +47,20 @@ class LighthouseCIReport {
         const pageLoads = navigationEvents.filter(e => e.type === 'page_load');
         const detailedNavigations = navigationEvents.filter(e => e.type === 'detailed_navigation');
         
-        // Yükleme sürelerini hesapla
+        // Yükleme sürelerini hesapla ve yuvarla
         let pageLoadTimes = [];
         if (pageLoads.length > 0) {
-            pageLoadTimes = pageLoads.map(p => p.loadTime || 0).filter(t => t > 0);
+            pageLoadTimes = pageLoads.map(p => Math.round(p.loadTime || 0)).filter(t => t > 0);
         } else if (detailedNavigations.length > 0) {
             // Detailed navigation'dan yükleme süresini hesapla
             pageLoadTimes = detailedNavigations.map(nav => {
                 const data = nav.data;
-                return data ? (data.loadEventEnd - data.loadEventStart) : 0;
+                return data ? Math.round(data.loadEventEnd - data.loadEventStart) : 0;
             }).filter(t => t > 0);
         }
+        
+        // Detaylı network analizi
+        const networkAnalysis = this.analyzeNetworkTiming(resourceTiming);
         
         // Kaynak analizi
         const resourceStats = this.analyzeResources(resourceTiming);
@@ -81,12 +84,28 @@ class LighthouseCIReport {
                     url: nav.url,
                     type: nav.type,
                     timestamp: nav.timestamp,
-                    loadTime: nav.loadTime || 0,
-                    firstPaint: nav.firstPaint || 0,
-                    firstContentfulPaint: nav.firstContentfulPaint || 0,
-                    detailedData: nav.data || null
+                    loadTime: Math.round(nav.loadTime || 0),
+                    firstPaint: Math.round(nav.firstPaint || 0),
+                    firstContentfulPaint: Math.round(nav.firstContentfulPaint || 0),
+                    detailedData: nav.data ? {
+                        ...nav.data,
+                        loadEventEnd: Math.round(nav.data.loadEventEnd || 0),
+                        loadEventStart: Math.round(nav.data.loadEventStart || 0),
+                        domContentLoadedEventEnd: Math.round(nav.data.domContentLoadedEventEnd || 0),
+                        domContentLoadedEventStart: Math.round(nav.data.domContentLoadedEventStart || 0),
+                        navigationStart: Math.round(nav.data.navigationStart || 0),
+                        responseEnd: Math.round(nav.data.responseEnd || 0),
+                        responseStart: Math.round(nav.data.responseStart || 0),
+                        requestStart: Math.round(nav.data.requestStart || 0),
+                        domainLookupEnd: Math.round(nav.data.domainLookupEnd || 0),
+                        domainLookupStart: Math.round(nav.data.domainLookupStart || 0),
+                        connectEnd: Math.round(nav.data.connectEnd || 0),
+                        connectStart: Math.round(nav.data.connectStart || 0),
+                        fetchStart: Math.round(nav.data.fetchStart || 0)
+                    } : null
                 }))
             },
+            networkAnalysis,
             resourceStats,
             errorStats,
             summary: {
@@ -98,6 +117,81 @@ class LighthouseCIReport {
                 averageMemoryUsage: memoryUsage.length > 0 ? 
                     Math.round(memoryUsage.reduce((sum, m) => sum + m.usedJSHeapSize, 0) / memoryUsage.length) : 0
             }
+        };
+    }
+
+    analyzeNetworkTiming(resourceTiming) {
+        if (resourceTiming.length === 0) {
+            return {
+                totalRequests: 0,
+                averageResponseTime: 0,
+                averageDownloadTime: 0,
+                averageConnectTime: 0,
+                averageDNSLookupTime: 0,
+                slowestRequests: [],
+                fastestRequests: [],
+                byProtocol: {},
+                byDomain: {}
+            };
+        }
+
+        const requests = [];
+        const byProtocol = {};
+        const byDomain = {};
+
+        resourceTiming.forEach(resource => {
+            const url = new URL(resource.url);
+            const protocol = url.protocol.replace(':', '');
+            const domain = url.hostname;
+            
+            // Network timing hesaplamaları
+            const dnsLookupTime = Math.round((resource.domainLookupEnd || 0) - (resource.domainLookupStart || 0));
+            const connectTime = Math.round((resource.connectEnd || 0) - (resource.connectStart || 0));
+            const responseTime = Math.round((resource.responseEnd || 0) - (resource.responseStart || 0));
+            const downloadTime = Math.round((resource.responseEnd || 0) - (resource.responseStart || 0));
+            const totalTime = Math.round((resource.responseEnd || 0) - (resource.fetchStart || 0));
+
+            byProtocol[protocol] = (byProtocol[protocol] || 0) + 1;
+            byDomain[domain] = (byDomain[domain] || 0) + 1;
+
+            requests.push({
+                url: resource.url,
+                protocol,
+                domain,
+                dnsLookupTime,
+                connectTime,
+                responseTime,
+                downloadTime,
+                totalTime,
+                size: resource.size || 0,
+                status: resource.status
+            });
+        });
+
+        const slowestRequests = requests
+            .sort((a, b) => b.totalTime - a.totalTime)
+            .slice(0, 10);
+
+        const fastestRequests = requests
+            .sort((a, b) => a.totalTime - b.totalTime)
+            .slice(0, 10);
+
+        const totalRequests = requests.length;
+        const averageResponseTime = Math.round(requests.reduce((sum, r) => sum + r.responseTime, 0) / totalRequests);
+        const averageDownloadTime = Math.round(requests.reduce((sum, r) => sum + r.downloadTime, 0) / totalRequests);
+        const averageConnectTime = Math.round(requests.reduce((sum, r) => sum + r.connectTime, 0) / totalRequests);
+        const averageDNSLookupTime = Math.round(requests.reduce((sum, r) => sum + r.dnsLookupTime, 0) / totalRequests);
+
+        return {
+            totalRequests,
+            averageResponseTime,
+            averageDownloadTime,
+            averageConnectTime,
+            averageDNSLookupTime,
+            slowestRequests,
+            fastestRequests,
+            byProtocol,
+            byDomain
         };
     }
 
@@ -255,7 +349,7 @@ class LighthouseCIReport {
 
     generateHTML(sessionData, reportData) {
         const { sessionId, browserType, url, startTime, endTime, duration } = sessionData;
-        const { performanceScores, pageLoadAnalysis, resourceStats, errorStats, summary } = reportData;
+        const { performanceScores, pageLoadAnalysis, networkAnalysis, resourceStats, errorStats, summary } = reportData;
 
         return `
 <!DOCTYPE html>
@@ -590,6 +684,75 @@ class LighthouseCIReport {
                  </tbody>
              </table>
              ` : '<p>No page load data available.</p>'}
+        </div>
+
+        <!-- Network Analysis -->
+        <div class="section">
+            <h2>🌐 Network Analysis</h2>
+            <div class="metrics-grid">
+                <div class="metric">
+                    <div class="value">${networkAnalysis.totalRequests}</div>
+                    <div class="label">Total Requests</div>
+                </div>
+                <div class="metric">
+                    <div class="value">${networkAnalysis.averageResponseTime}ms</div>
+                    <div class="label">Avg Response Time</div>
+                </div>
+                <div class="metric">
+                    <div class="value">${networkAnalysis.averageDownloadTime}ms</div>
+                    <div class="label">Avg Download Time</div>
+                </div>
+                <div class="metric">
+                    <div class="value">${networkAnalysis.averageConnectTime}ms</div>
+                    <div class="label">Avg Connect Time</div>
+                </div>
+                <div class="metric">
+                    <div class="value">${networkAnalysis.averageDNSLookupTime}ms</div>
+                    <div class="label">Avg DNS Lookup</div>
+                </div>
+            </div>
+            
+            ${networkAnalysis.slowestRequests.length > 0 ? `
+            <h3>Slowest Network Requests</h3>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>URL</th>
+                        <th>Protocol</th>
+                        <th>Total Time</th>
+                        <th>DNS Lookup</th>
+                        <th>Connect</th>
+                        <th>Response</th>
+                        <th>Size</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${networkAnalysis.slowestRequests.map(req => `
+                    <tr>
+                        <td>${req.url}</td>
+                        <td>${req.protocol}</td>
+                        <td>${req.totalTime}ms</td>
+                        <td>${req.dnsLookupTime}ms</td>
+                        <td>${req.connectTime}ms</td>
+                        <td>${req.responseTime}ms</td>
+                        <td>${this.formatBytes(req.size)}</td>
+                    </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+            ` : ''}
+            
+            ${Object.keys(networkAnalysis.byProtocol).length > 0 ? `
+            <h3>Requests by Protocol</h3>
+            <div class="metrics-grid">
+                ${Object.entries(networkAnalysis.byProtocol).map(([protocol, count]) => `
+                <div class="metric">
+                    <div class="value">${count}</div>
+                    <div class="label">${protocol.toUpperCase()}</div>
+                </div>
+                `).join('')}
+            </div>
+            ` : ''}
         </div>
 
         <!-- Resource Analysis -->
