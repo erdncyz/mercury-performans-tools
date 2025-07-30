@@ -21,8 +21,10 @@ Mercury Performance Tools, web siteleri ve mobil uygulamalar için kapsamlı per
 
 ### Raporlama
 - **JSON Raporları**: Detaylı JSON formatında raporlar
+- **Mercury Performance Report**: Kendi geliştirdiğimiz Lighthouse CI tarzı raporlar
+- **PageSpeed Insights Report**: Google PageSpeed Insights API raporları
+- **Gemini AI Analysis Report**: AI destekli detaylı analiz raporları
 - **CSV Export**: Excel'de açılabilir CSV raporları
-- **PDF Raporları**: Profesyonel PDF raporları (gelecek sürümde)
 - **Real-time Charts**: Canlı grafikler ve metrikler
 
 ## 🛠️ Kurulum
@@ -51,7 +53,17 @@ npm install
 mkdir -p reports data
 ```
 
-4. **Android SDK kurulumu (opsiyonel)**
+4. **API Key'leri ayarlayın (opsiyonel)**
+```bash
+# .env dosyası oluşturun
+cp .env.example .env
+
+# API key'lerinizi .env dosyasına ekleyin:
+# PAGESPEED_API_KEY=your_pagespeed_api_key_here
+# GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+5. **Android SDK kurulumu (opsiyonel)**
 ```bash
 # Android Studio ile birlikte gelir
 # Veya sadece command line tools:
@@ -96,6 +108,35 @@ npm run dev
 - **Sistem Durumu**: Web ve Android analyzer'ların durumunu gösterir
 - **Son Raporlar**: Oluşturulan raporların listesi
 - **Hızlı Erişim**: Sık kullanılan işlemler
+
+## 🔑 API Key Kurulumu
+
+### Google PageSpeed Insights API
+PageSpeed Insights raporları için Google API key'i gereklidir:
+
+1. **Google Cloud Console**'a gidin: https://console.cloud.google.com/
+2. **Yeni proje** oluşturun veya mevcut projeyi seçin
+3. **PageSpeed Insights API**'yi etkinleştirin
+4. **Credentials** > **Create Credentials** > **API Key**
+5. API key'inizi `.env` dosyasına ekleyin:
+```bash
+PAGESPEED_API_KEY=your_api_key_here
+```
+
+### Google Gemini AI API
+AI destekli analiz raporları için Gemini API key'i gereklidir:
+
+1. **Google AI Studio**'ya gidin: https://makersuite.google.com/app/apikey
+2. **Create API Key** butonuna tıklayın
+3. API key'inizi `.env` dosyasına ekleyin:
+```bash
+GEMINI_API_KEY=your_api_key_here
+```
+
+### Güvenlik Notları
+- `.env` dosyası otomatik olarak `.gitignore`'a eklenmiştir
+- API key'lerinizi asla git repository'ye commit etmeyin
+- Production ortamında environment variable'ları güvenli şekilde yönetin
 
 ## 🔧 API Endpoints
 
