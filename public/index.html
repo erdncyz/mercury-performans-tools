@@ -38,14 +38,6 @@
                     <i class="fas fa-globe"></i>
                     Web Performance
                 </button>
-                <button class="tab-btn" data-tab="mobile">
-                    <i class="fas fa-mobile-alt"></i>
-                    Mobile Performance
-                </button>
-                <button class="tab-btn" data-tab="dashboard">
-                    <i class="fas fa-tachometer-alt"></i>
-                    Dashboard
-                </button>
             </nav>
 
             <!-- Web Performance Tab -->
@@ -155,121 +147,7 @@
                 </div>
             </div>
 
-            <!-- Mobile Performance Tab -->
-            <div class="tab-content" id="mobile-tab">
-                <div class="content-grid">
-                    <!-- Device Selection -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h3><i class="fas fa-mobile-alt"></i> Device Selection</h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="device-list" id="device-list">
-                                <div class="loading">Loading devices...</div>
-                            </div>
-                            <button class="btn btn-secondary" onclick="refreshDevices()">
-                                <i class="fas fa-sync-alt"></i>
-                                Refresh Devices
-                            </button>
-                        </div>
-                    </div>
 
-                    <!-- App Selection -->
-                    <div class="card" id="app-selection" style="display: none;">
-                        <div class="card-header">
-                            <h3><i class="fas fa-app-store"></i> App Selection</h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="app-list" id="app-list">
-                                <div class="loading">Loading apps...</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Mobile Monitoring -->
-                    <div class="card" id="mobile-monitoring" style="display: none;">
-                        <div class="card-header">
-                            <h3><i class="fas fa-chart-line"></i> Performance Monitoring</h3>
-                            <div class="card-actions">
-                                <button class="btn btn-sm btn-danger" id="stop-monitoring-btn" onclick="stopMobileMonitoring()" style="display: none;">
-                                    <i class="fas fa-stop"></i> Stop
-                                </button>
-                                <button class="btn btn-sm btn-secondary" onclick="exportMobileReport('json')">
-                                    <i class="fas fa-download"></i> JSON
-                                </button>
-                                <button class="btn btn-sm btn-secondary" onclick="exportMobileReport('csv')">
-                                    <i class="fas fa-download"></i> CSV
-                                </button>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="metrics-grid">
-                                <div class="metric-card">
-                                    <div class="metric-value" id="mobile-cpu">-</div>
-                                    <div class="metric-label">CPU Usage (%)</div>
-                                </div>
-                                <div class="metric-card">
-                                    <div class="metric-value" id="mobile-memory">-</div>
-                                    <div class="metric-label">RAM Usage (MB)</div>
-                                </div>
-                                <div class="metric-card">
-                                    <div class="metric-value" id="mobile-battery">-</div>
-                                    <div class="metric-label">Battery (%)</div>
-                                </div>
-                                <div class="metric-card">
-                                    <div class="metric-value" id="mobile-fps">-</div>
-                                    <div class="metric-label">FPS</div>
-                                </div>
-                            </div>
-                            <div class="chart-container">
-                                <canvas id="mobile-performance-chart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Dashboard Tab -->
-            <div class="tab-content" id="dashboard-tab">
-                <div class="content-grid">
-                    <!-- System Status -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h3><i class="fas fa-server"></i> System Status</h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="status-grid">
-                                <div class="status-item">
-                                    <i class="fas fa-globe status-icon success"></i>
-                                    <div class="status-info">
-                                        <div class="status-label">Web Analyzer</div>
-                                        <div class="status-value" id="web-status">Starting...</div>
-                                    </div>
-                                </div>
-                                <div class="status-item">
-                                    <i class="fas fa-mobile-alt status-icon warning"></i>
-                                    <div class="status-info">
-                                        <div class="status-label">Android Analyzer</div>
-                                        <div class="status-value" id="android-status">Checking...</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Recent Reports -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h3><i class="fas fa-history"></i> Recent Reports</h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="reports-list" id="reports-list">
-                                <div class="loading">Loading reports...</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </main>
     </div>
 

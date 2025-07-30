@@ -9,7 +9,6 @@ const fs = require('fs').promises;
 
 const WebPerformanceAnalyzer = require('./web/performance-analyzer');
 const InteractivePerformanceAnalyzer = require('./web/interactive-analyzer');
-const AndroidPerformanceAnalyzer = require('./mobile/android-analyzer');
 
 class PerformanceMonitorServer {
     constructor(port = 3000) {
@@ -25,7 +24,6 @@ class PerformanceMonitorServer {
 
         this.webAnalyzer = new WebPerformanceAnalyzer();
         this.interactiveAnalyzer = new InteractivePerformanceAnalyzer();
-        this.androidAnalyzer = new AndroidPerformanceAnalyzer();
 
         this.setupMiddleware();
         this.setupRoutes();
@@ -95,8 +93,7 @@ class PerformanceMonitorServer {
                 status: 'running',
                 timestamp: new Date().toISOString(),
                 port: this.port,
-                webAnalyzer: this.webAnalyzer.browser ? 'initialized' : 'not_initialized',
-                androidAnalyzer: this.androidAnalyzer.devices.length > 0 ? 'devices_found' : 'no_devices'
+                webAnalyzer: this.webAnalyzer.browser ? 'initialized' : 'not_initialized'
             });
         });
 
@@ -297,110 +294,13 @@ class PerformanceMonitorServer {
             }
         });
 
-        // Android Performance API
-        this.app.get('/api/android/devices', async (req, res) => {
-            try {
-                await this.androidAnalyzer.refreshDevices();
-                res.json(this.androidAnalyzer.devices);
-            } catch (error) {
-                console.error('Cihaz listesi hatası:', error);
-                res.status(500).json({ error: error.message });
-            }
-        });
 
-        this.app.post('/api/android/select-device', async (req, res) => {
-            try {
-                const { deviceId } = req.body;
-                const device = await this.androidAnalyzer.selectDevice(deviceId);
-                res.json({ success: true, device });
-            } catch (error) {
-                console.error('Cihaz seçme hatası:', error);
-                res.status(500).json({ error: error.message });
-            }
-        });
 
-        this.app.get('/api/android/apps', async (req, res) => {
-            try {
-                if (!this.androidAnalyzer.currentDevice) {
-                    return res.status(400).json({ error: 'Önce cihaz seçin' });
-                }
 
-                const apps = await this.androidAnalyzer.getInstalledApps();
-                res.json(apps);
-            } catch (error) {
-                console.error('Uygulama listesi hatası:', error);
-                res.status(500).json({ error: error.message });
-            }
-        });
 
-        this.app.post('/api/android/start-monitoring', async (req, res) => {
-            try {
-                const { packageName, duration = 60000 } = req.body;
-                
-                if (!packageName) {
-                    return res.status(400).json({ error: 'Package name gerekli' });
-                }
 
-                if (!this.androidAnalyzer.currentDevice) {
-                    return res.status(400).json({ error: 'Önce cihaz seçin' });
-                }
 
-                // Uygulamayı başlat
-                await this.androidAnalyzer.launchApp(packageName);
-                
-                // İzlemeyi başlat
-                const monitoringInfo = await this.androidAnalyzer.startMonitoring(packageName, duration);
-                
-                res.json({ 
-                    success: true, 
-                    monitoringInfo,
-                    message: 'Performans izleme başlatıldı'
-                });
-            } catch (error) {
-                console.error('İzleme başlatma hatası:', error);
-                res.status(500).json({ error: error.message });
-            }
-        });
 
-        this.app.post('/api/android/stop-monitoring', async (req, res) => {
-            try {
-                await this.androidAnalyzer.stopMonitoring();
-                res.json({ success: true, message: 'İzleme durduruldu' });
-            } catch (error) {
-                console.error('İzleme durdurma hatası:', error);
-                res.status(500).json({ error: error.message });
-            }
-        });
-
-        this.app.get('/api/android/metrics', async (req, res) => {
-            try {
-                const metrics = await this.androidAnalyzer.getCurrentMetrics();
-                res.json(metrics);
-            } catch (error) {
-                console.error('Metrik alma hatası:', error);
-                res.status(500).json({ error: error.message });
-            }
-        });
-
-        this.app.post('/api/android/report', async (req, res) => {
-            try {
-                const { packageName, format = 'json' } = req.body;
-                
-                if (!packageName) {
-                    return res.status(400).json({ error: 'Package name gerekli' });
-                }
-
-                const reportPath = await this.androidAnalyzer.generateReport(packageName, format);
-                res.json({ 
-                    success: true, 
-                    reportPath,
-                    message: `${format.toUpperCase()} raporu oluşturuldu`
-                });
-            } catch (error) {
-                console.error('Android rapor oluşturma hatası:', error);
-                res.status(500).json({ error: error.message });
-            }
-        });
 
         // Raporları listele
         this.app.get('/api/reports', async (req, res) => {
@@ -462,49 +362,7 @@ class PerformanceMonitorServer {
                 }
             });
 
-            // Android performance real-time updates
-            socket.on('android-start-monitoring', async (data) => {
-                try {
-                    const { packageName, duration = 60000 } = data;
-                    
-                    if (!this.androidAnalyzer.currentDevice) {
-                        socket.emit('android-error', { error: 'Cihaz seçilmemiş' });
-                        return;
-                    }
 
-                    socket.emit('android-monitoring-start', { packageName, duration });
-                    
-                    // Uygulamayı başlat
-                    await this.androidAnalyzer.launchApp(packageName);
-                    
-                    // İzlemeyi başlat
-                    await this.androidAnalyzer.startMonitoring(packageName, duration);
-                    
-                    // Periyodik olarak metrikleri gönder
-                    const metricInterval = setInterval(async () => {
-                        if (!this.androidAnalyzer.monitoring) {
-                            clearInterval(metricInterval);
-                            socket.emit('android-monitoring-stop');
-                            return;
-                        }
-                        
-                        const metrics = await this.androidAnalyzer.getCurrentMetrics();
-                        socket.emit('android-metrics-update', metrics);
-                    }, 2000);
-
-                } catch (error) {
-                    socket.emit('android-error', { error: error.message });
-                }
-            });
-
-            socket.on('android-stop-monitoring', async () => {
-                try {
-                    await this.androidAnalyzer.stopMonitoring();
-                    socket.emit('android-monitoring-stopped');
-                } catch (error) {
-                    socket.emit('android-error', { error: error.message });
-                }
-            });
 
             socket.on('disconnect', () => {
                 console.log('Bağlantı kesildi:', socket.id);
@@ -517,8 +375,7 @@ class PerformanceMonitorServer {
             // Web analyzer'ı başlat
             await this.webAnalyzer.initialize();
             
-            // Android analyzer'ı başlat
-            await this.androidAnalyzer.initialize();
+
             
             this.server.listen(this.port, () => {
                 console.log(`☿ Mercury Performance Tools Server ${this.port} portunda çalışıyor`);
