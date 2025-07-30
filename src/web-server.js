@@ -5,6 +5,7 @@ const socketIo = require('socket.io');
 const cors = require('cors');
 const helmet = require('helmet');
 const path = require('path');
+const fs = require('fs').promises;
 
 const WebPerformanceAnalyzer = require('./web/performance-analyzer');
 const InteractivePerformanceAnalyzer = require('./web/interactive-analyzer');
@@ -202,19 +203,43 @@ class PerformanceMonitorServer {
                 const { sessionId } = req.params;
                 const { type = 'html' } = req.query;
                 
-                const reportPaths = await this.generateBrowserAnalysisReport(sessionId);
+                console.log('Download request:', { sessionId, type });
+                
+                const reportsDir = path.join(__dirname, '../reports');
+                console.log('Reports directory:', reportsDir);
+                
+                const files = await fs.readdir(reportsDir);
+                console.log('Available files:', files);
+                
+                let targetFile = null;
                 
                 if (type === 'json') {
-                    res.download(reportPaths.json);
-                } else if (type === 'pagespeed' && reportPaths.pagespeed) {
-                    res.download(reportPaths.pagespeed);
-                } else if (type === 'gemini' && reportPaths.gemini) {
-                    res.download(reportPaths.gemini);
+                    targetFile = files.find(file => file.includes(sessionId) && file.endsWith('.json'));
+                } else if (type === 'pagespeed') {
+                    targetFile = files.find(file => file.includes(sessionId) && file.includes('pagespeed-report') && file.endsWith('.html'));
+                } else if (type === 'gemini') {
+                    targetFile = files.find(file => file.includes(sessionId) && file.includes('gemini-ai-analysis') && file.endsWith('.html'));
                 } else {
-                    res.download(reportPaths.html);
+                    // Default to mercury performance report
+                    targetFile = files.find(file => file.includes(sessionId) && file.includes('mercury-performance-report') && file.endsWith('.html'));
                 }
+                
+                console.log('Target file:', targetFile);
+                
+                if (!targetFile) {
+                    return res.status(404).json({ 
+                        success: false, 
+                        message: `Report not found for session ${sessionId} and type ${type}` 
+                    });
+                }
+                
+                const filePath = path.join(reportsDir, targetFile);
+                console.log('File path:', filePath);
+                
+                res.download(filePath);
+                
             } catch (error) {
-                console.error('Tarayıcı analizi indirme hatası:', error);
+                console.error('Browser analysis download error:', error);
                 res.status(500).json({ 
                     success: false, 
                     message: error.message 
@@ -226,7 +251,7 @@ class PerformanceMonitorServer {
         this.app.get('/api/reports', async (req, res) => {
             try {
                 const reportsDir = path.join(__dirname, '../reports');
-                const files = await fs.promises.readdir(reportsDir);
+                const files = await fs.readdir(reportsDir);
                 
                 const reports = [];
                 for (const file of files) {
@@ -380,7 +405,6 @@ class PerformanceMonitorServer {
         // Raporları listele
         this.app.get('/api/reports', async (req, res) => {
             try {
-                const fs = require('fs').promises;
                 const reportsDir = path.join(__dirname, '../reports');
                 
                 try {
