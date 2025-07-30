@@ -750,8 +750,9 @@ class BrowserAnalyzer {
 
             // PageSpeed Insights raporu oluştur
             let pageSpeedReportPath = null;
+            let pageSpeedData = null;
             try {
-                const pageSpeedData = await this.pageSpeedAnalyzer.generatePageSpeedReport(reportData);
+                pageSpeedData = await this.pageSpeedAnalyzer.generatePageSpeedReport(reportData);
                 pageSpeedReportPath = await this.pageSpeedReport.generateHTMLReport(pageSpeedData);
                 console.log('PageSpeed Insights HTML raporu oluşturuldu:', pageSpeedReportPath);
             } catch (error) {
