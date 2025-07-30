@@ -1,39 +1,38 @@
 # Mercury Performance Tools ☿
 
-Mercury Performance Tools is a comprehensive performance analysis and monitoring tool for websites and mobile applications. It collects real-time performance metrics using modern web technologies and generates detailed reports.
+Mercury Performance Tools is a comprehensive web performance analysis and monitoring tool. It collects real-time performance metrics using modern web technologies and generates detailed reports with AI-powered insights.
 
 ## 🚀 Features
 
 ### Web Performance Analysis
-- **Page Load Time**: Measures complete page load duration
-- **Core Web Vitals**: Calculates FCP, LCP, CLS metrics
-- **Navigation Timing**: Analyzes DNS lookup, TCP connection, server response times
-- **Resource Timing**: Tracks loading times of all resources
-- **Performance Score**: Calculates Lighthouse-like performance score
+- **Interactive Browser Analysis**: Real browser automation with Playwright
+- **Multi-Browser Support**: Chrome, Firefox, Safari, Edge
+- **Full-Screen Experience**: Kiosk mode for immersive testing
+- **Real-time Monitoring**: Live performance metrics collection
+- **SPA Navigation Tracking**: Detects Single Page Application navigations
+- **User Interaction Tracking**: Clicks, scrolls, and navigation events
 
-### Mobile Performance Monitoring
-- **Android Device Support**: Automatically detects Android devices connected via ADB
-- **CPU Usage**: Monitors real-time CPU usage rate
-- **Memory Usage**: Tracks RAM usage
-- **Battery Monitoring**: Battery level and temperature monitoring
-- **FPS Tracking**: Measures frame rate performance
-- **App Performance**: Analyzes application startup and runtime performance
+### Performance Metrics
+- **Page Load Time**: Complete page load duration measurement
+- **Core Web Vitals**: FCP, LCP, CLS metrics calculation
+- **Navigation Timing**: DNS lookup, TCP connection, server response times
+- **Resource Timing**: Loading times of all resources (images, scripts, CSS)
+- **Memory Usage**: Browser memory consumption tracking
+- **Performance Score**: Lighthouse-like performance scoring
 
-### Reporting
-- **JSON Reports**: Detailed reports in JSON format
-- **Mercury Performance Report**: Our own Lighthouse CI-style reports
-- **PageSpeed Insights Report**: Google PageSpeed Insights API reports
-- **Gemini AI Analysis Report**: AI-powered detailed analysis reports
-- **CSV Export**: Excel-compatible CSV reports
-- **Real-time Charts**: Live charts and metrics
+### Advanced Reporting
+- **Mercury Performance Report**: Custom Lighthouse CI-style reports
+- **PageSpeed Insights Report**: Google PageSpeed Insights API integration
+- **Gemini AI Analysis Report**: AI-powered performance analysis and recommendations
+- **JSON Reports**: Raw data for programmatic analysis
+- **Real-time Charts**: Live visualization of performance metrics
 
 ## 🛠️ Installation
 
 ### Requirements
 - Node.js 16+ 
 - npm or yarn
-- Android SDK (for mobile analysis)
-- ADB (Android Debug Bridge)
+- Playwright browsers (automatically installed)
 
 ### Installation Steps
 
@@ -63,16 +62,14 @@ cp .env.example .env
 # GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
-5. **Android SDK installation (optional)**
+5. **Install Playwright browsers**
 ```bash
-# Comes with Android Studio
-# Or command line tools only:
-# https://developer.android.com/studio#command-tools
+npx playwright install chromium firefox webkit
 ```
 
 ## 🚀 Usage
 
-### Web Application
+### Start the Application
 ```bash
 npm start
 ```
@@ -87,32 +84,28 @@ npm run dev
 
 ### Web Performance Analysis
 
-1. Go to the **Web Performance** tab
-2. Enter the URL you want to analyze
-3. Click **Start Analysis** button
-4. View results in charts
-5. Download reports in your preferred format
+1. **Select Browser**: Choose Chrome, Firefox, Safari, or Edge
+2. **Enter URL**: Input the website URL you want to analyze
+3. **Start Analysis**: Click "Start Analysis" button
+4. **Browse Interactively**: The browser opens in full-screen mode
+5. **Navigate Freely**: Browse the site naturally - all interactions are tracked
+6. **Stop Analysis**: Click "Stop Analysis" when finished
+7. **View Results**: See detailed analysis results directly on the page
+8. **Download Reports**: Get Mercury, PageSpeed, and AI analysis reports
 
-### Mobile Performance Monitoring
-
-1. Go to the **Mobile Performance** tab
-2. Connect your Android device via USB
-3. Click **Refresh Devices** button
-4. Select your device
-5. Choose the application you want to monitor
-6. Click **Start Monitoring** button
-7. Track real-time metrics
-
-### Dashboard
-
-- **System Status**: Shows status of Web and Android analyzers
-- **Recent Reports**: List of generated reports
-- **Quick Access**: Frequently used operations
+### What Gets Tracked
+- **Page Loads**: Initial page load and subsequent navigations
+- **SPA Navigation**: Single Page Application route changes
+- **Resource Loading**: Images, scripts, CSS, fonts, and other resources
+- **Performance Metrics**: Core Web Vitals and timing data
+- **User Interactions**: Clicks, scrolls, and form interactions
+- **Memory Usage**: Browser memory consumption
+- **Errors**: Console errors and network failures
 
 ## 🔑 API Key Setup
 
 ### Google PageSpeed Insights API
-Google API key is required for PageSpeed Insights reports:
+For enhanced PageSpeed Insights reports:
 
 1. Go to **Google Cloud Console**: https://console.cloud.google.com/
 2. Create a **new project** or select existing project
@@ -124,7 +117,7 @@ PAGESPEED_API_KEY=your_api_key_here
 ```
 
 ### Google Gemini AI API
-Gemini API key is required for AI-powered analysis reports:
+For AI-powered performance analysis:
 
 1. Go to **Google AI Studio**: https://makersuite.google.com/app/apikey
 2. Click **Create API Key** button
@@ -141,45 +134,42 @@ GEMINI_API_KEY=your_api_key_here
 ## 🔧 API Endpoints
 
 ### Web Performance
-- `GET /api/web/analyze` - Start web performance analysis
-- `GET /api/web/status/:id` - Get analysis status
-- `GET /api/web/report/:id` - Get analysis report
-- `GET /api/web/download/:id` - Download report
-
-### Mobile Performance
-- `GET /api/android/devices` - List connected devices
-- `POST /api/android/select-device` - Select device for monitoring
-- `GET /api/android/apps` - List installed apps
-- `POST /api/android/start-monitoring` - Start performance monitoring
-- `GET /api/android/status/:id` - Get monitoring status
-- `GET /api/android/report/:id` - Get monitoring report
+- `POST /api/web/browser/start` - Start interactive browser analysis
+- `POST /api/web/browser/stop` - Stop analysis and generate reports
+- `GET /api/web/browser/status/:id` - Get analysis status
+- `GET /api/web/browser/report/:id` - Get analysis report
+- `GET /api/web/browser/download/:id` - Download reports
 
 ### Reports
 - `GET /api/reports` - List all generated reports
 - `GET /api/reports/:id` - Get specific report details
+
+### System
+- `GET /api/status` - System status and health check
 
 ## 📁 Project Structure
 
 ```
 mercury-performance-tools/
 ├── src/
-│   ├── web-server.js          # Main server file
-│   ├── web/
-│   │   ├── performance-analyzer.js
-│   │   ├── browser-analyzer.js
-│   │   ├── pagespeed-analyzer.js
-│   │   ├── gemini-analyzer.js
-│   │   ├── lighthouse-ci-report.js
-│   │   ├── pagespeed-report.js
-│   │   └── gemini-report.js
-│   └── mobile/
-│       └── android-analyzer.js
+│   ├── web-server.js          # Main Express server
+│   └── web/
+│       ├── browser-analyzer.js        # Interactive browser analysis
+│       ├── performance-analyzer.js    # Headless performance analysis
+│       ├── pagespeed-analyzer.js      # PageSpeed Insights integration
+│       ├── gemini-analyzer.js         # Gemini AI integration
+│       ├── lighthouse-ci-report.js    # Mercury performance reports
+│       ├── pagespeed-report.js        # PageSpeed HTML reports
+│       └── gemini-report.js           # AI analysis reports
 ├── public/
-│   ├── index.html
+│   ├── index.html             # Main web interface
 │   ├── css/
+│   │   └── style.css          # Application styles
 │   └── js/
-├── reports/                   # Generated reports
-├── data/                      # Analysis data
+│       ├── lib/               # Third-party libraries
+│       └── app.js             # Frontend application logic
+├── reports/                   # Generated reports storage
+├── data/                      # Analysis data storage
 ├── .env                       # Environment variables
 └── package.json
 ```
@@ -187,60 +177,65 @@ mercury-performance-tools/
 ## 🎯 Supported Browsers
 
 - **Chrome**: Full support with performance metrics
-- **Firefox**: Full support with performance metrics
+- **Firefox**: Full support with performance metrics  
 - **Safari**: Full support with performance metrics
 - **Edge**: Full support with performance metrics
 
 ## 📊 Report Types
 
-### 1. JSON Report
-Raw data in JSON format for programmatic analysis.
+### 1. Mercury Performance Report
+Our custom Lighthouse CI-style report featuring:
+- **Performance Scores**: Overall performance rating
+- **Core Web Vitals**: FCP, LCP, CLS metrics
+- **Resource Analysis**: Detailed resource loading breakdown
+- **Navigation Events**: All page visits and SPA navigations
+- **Error Tracking**: Console errors and network issues
+- **Memory Usage**: Browser memory consumption data
 
-### 2. Mercury Performance Report
-Our own Lighthouse CI-style report with:
-- Performance scores
-- Core Web Vitals
-- Resource analysis
-- Error tracking
-- Navigation events
-
-### 3. PageSpeed Insights Report
+### 2. PageSpeed Insights Report
 Google PageSpeed Insights API report with:
-- Mobile and Desktop analysis
-- Performance scores (Performance, Accessibility, Best Practices, SEO)
-- Core Web Vitals metrics
-- Optimization opportunities
-- Loading experience data
+- **Mobile & Desktop Analysis**: Separate reports for both
+- **Performance Scores**: Performance, Accessibility, Best Practices, SEO
+- **Core Web Vitals**: Detailed metric breakdown
+- **Optimization Opportunities**: Specific improvement suggestions
+- **Loading Experience**: Visual loading timeline
 
-### 4. Gemini AI Analysis Report
-AI-powered analysis report with:
-- Detailed performance evaluation
-- Mobile vs Desktop comparison
-- Optimization recommendations
-- Priority action items
-- Performance score predictions
+### 3. Gemini AI Analysis Report
+AI-powered intelligent analysis featuring:
+- **Performance Evaluation**: Detailed performance assessment
+- **Mobile vs Desktop Comparison**: Cross-device analysis
+- **Optimization Recommendations**: AI-generated improvement suggestions
+- **Priority Action Items**: Ranked optimization tasks
+- **Performance Predictions**: AI-powered score predictions
+- **Multi-language Support**: Analysis in user's preferred language
+
+### 4. JSON Report
+Raw data export for:
+- **Programmatic Analysis**: Custom data processing
+- **Integration**: Third-party tool integration
+- **Debugging**: Detailed troubleshooting information
 
 ## 🚀 Advanced Features
 
 ### Interactive Browser Analysis
-- Real browser automation with Playwright
-- Full-screen browser experience
-- User interaction tracking
-- SPA navigation detection
-- Comprehensive performance data collection
+- **Real Browser Automation**: Uses actual browsers, not headless mode
+- **Full-Screen Experience**: Kiosk mode for immersive testing
+- **Natural User Interaction**: Real clicks, scrolls, and navigation
+- **SPA Navigation Detection**: Automatic Single Page Application tracking
+- **Comprehensive Data Collection**: All performance metrics captured
 
 ### AI-Powered Analysis
-- Google Gemini AI integration
-- Intelligent performance evaluation
-- Automated recommendations
-- Multi-language support (AI responds in user's preferred language)
-- Priority-based action plans
+- **Google Gemini AI Integration**: Advanced AI analysis
+- **Intelligent Performance Evaluation**: Context-aware assessment
+- **Automated Recommendations**: AI-generated optimization suggestions
+- **Multi-language Support**: Analysis in user's preferred language
+- **Priority-based Action Plans**: Ranked improvement tasks
 
 ### Real-time Monitoring
-- Live performance metrics
-- Real-time charts and graphs
-- Instant alerting
-- Continuous monitoring capabilities
+- **Live Performance Metrics**: Real-time data collection
+- **Instant Feedback**: Immediate performance insights
+- **Continuous Tracking**: Ongoing metric monitoring
+- **Interactive Visualization**: Live charts and graphs
 
 ## 🔧 Configuration
 
@@ -281,28 +276,30 @@ lsof -ti:3000 | xargs kill -9
 
 2. **Playwright browsers not installed**
 ```bash
-npx playwright install chromium
+npx playwright install chromium firefox webkit
 ```
 
-3. **ADB not found**
-```bash
-# Install Android SDK and add to PATH
-export PATH=$PATH:$ANDROID_HOME/platform-tools
-```
-
-4. **API key errors**
+3. **API key errors**
 ```bash
 # Check .env file exists and contains valid keys
 cat .env
 ```
 
+4. **Browser launch failures**
+```bash
+# Check browser installation
+npx playwright install --help
+```
+
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
 4. Add tests if applicable
-5. Submit a pull request
+5. Commit your changes (`git commit -m 'Add amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Submit a pull request
 
 ## 📄 License
 
@@ -324,4 +321,4 @@ For support and questions:
 
 ---
 
-**Mercury Performance Tools** - Professional web and mobile performance analysis made simple! ☿ 
+**Mercury Performance Tools** - Professional web performance analysis made simple! ☿ 
