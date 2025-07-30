@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mercury Performance Tools ☿ - Performans Takip ve Analiz</title>
+    <title>Mercury Performance Tools ☿ - Performance Tracking and Analysis</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
@@ -20,11 +20,11 @@
                 <div class="header-actions">
                     <button class="btn btn-secondary" onclick="showReports()">
                         <i class="fas fa-file-alt"></i>
-                        Raporlar
+                        Reports
                     </button>
                     <button class="btn btn-primary" onclick="showSettings()">
                         <i class="fas fa-cog"></i>
-                        Ayarlar
+                        Settings
                     </button>
                 </div>
             </div>
@@ -36,11 +36,11 @@
             <nav class="nav-tabs">
                 <button class="tab-btn active" data-tab="web">
                     <i class="fas fa-globe"></i>
-                    Web Performans
+                    Web Performance
                 </button>
                 <button class="tab-btn" data-tab="mobile">
                     <i class="fas fa-mobile-alt"></i>
-                    Mobil Performans
+                    Mobile Performance
                 </button>
                 <button class="tab-btn" data-tab="dashboard">
                     <i class="fas fa-tachometer-alt"></i>
@@ -54,12 +54,12 @@
                     <!-- Web Performance Analysis -->
                     <div class="card">
                         <div class="card-header">
-                            <h3><i class="fas fa-globe"></i> Web Sitesi Analizi</h3>
+                            <h3><i class="fas fa-globe"></i> Website Analysis</h3>
                         </div>
                         <div class="card-body">
-                            <!-- Tarayıcı Seçimi -->
+                            <!-- Browser Selection -->
                             <div class="browser-selection">
-                                <h4>Tarayıcı Seçin:</h4>
+                                <h4>Select Browser:</h4>
                                 <div class="browser-buttons">
                                     <button class="browser-btn active" data-browser="chrome">
                                         <i class="fab fa-chrome"></i>
@@ -82,29 +82,29 @@
 
                             <!-- URL Input -->
                             <div class="url-input-section">
-                                <h4>Site URL'si:</h4>
+                                <h4>Website URL:</h4>
                                 <div class="url-input-container">
                                     <input type="url" id="web-url" placeholder="https://example.com" class="form-input">
                                     <button class="btn btn-primary" id="start-analysis-btn">
                                         <i class="fas fa-play"></i>
-                                        Analizi Başlat
+                                        Start Analysis
                                     </button>
                                 </div>
                             </div>
 
-                            <!-- Analiz Durumu -->
+                            <!-- Analysis Status -->
                             <div class="card" id="analysis-status" style="display: none;">
                                 <div class="card-header">
-                                    <h3><i class="fas fa-eye"></i> Analiz Durumu</h3>
+                                    <h3><i class="fas fa-eye"></i> Analysis Status</h3>
                                     <div class="card-actions">
                                                                             <button class="btn btn-sm btn-danger" id="stop-analysis-btn">
-                                        <i class="fas fa-stop"></i> Analizi Durdur
+                                        <i class="fas fa-stop"></i> Stop Analysis
                                     </button>
                                     </div>
                                 </div>
                                 <div class="card-body">
                                     <div class="analysis-info">
-                                        <div class="status-message" id="analysis-message">Analiz başlatılıyor...</div>
+                                        <div class="status-message" id="analysis-message">Starting analysis...</div>
                                         <div class="session-info" id="analysis-session-info"></div>
                                         <div class="progress-bar">
                                             <div class="progress-fill" id="analysis-progress"></div>
@@ -118,7 +118,7 @@
                     <!-- Web Performance Results -->
                     <div class="card" id="web-results" style="display: none;">
                         <div class="card-header">
-                            <h3><i class="fas fa-chart-bar"></i> Performans Sonuçları</h3>
+                            <h3><i class="fas fa-chart-bar"></i> Performance Results</h3>
                             <div class="card-actions">
                                 <button class="btn btn-sm btn-secondary" onclick="exportWebReport('json')">
                                     <i class="fas fa-download"></i> JSON
@@ -132,7 +132,7 @@
                             <div class="metrics-grid">
                                 <div class="metric-card">
                                     <div class="metric-value" id="web-load-time">-</div>
-                                    <div class="metric-label">Sayfa Yükleme (ms)</div>
+                                    <div class="metric-label">Page Load Time (ms)</div>
                                 </div>
                                 <div class="metric-card">
                                     <div class="metric-value" id="web-fcp">-</div>
@@ -144,7 +144,7 @@
                                 </div>
                                 <div class="metric-card">
                                     <div class="metric-value" id="web-performance-score">-</div>
-                                    <div class="metric-label">Performans Skoru</div>
+                                    <div class="metric-label">Performance Score</div>
                                 </div>
                             </div>
                             <div class="chart-container">
@@ -161,15 +161,15 @@
                     <!-- Device Selection -->
                     <div class="card">
                         <div class="card-header">
-                            <h3><i class="fas fa-mobile-alt"></i> Cihaz Seçimi</h3>
+                            <h3><i class="fas fa-mobile-alt"></i> Device Selection</h3>
                         </div>
                         <div class="card-body">
                             <div class="device-list" id="device-list">
-                                <div class="loading">Cihazlar yükleniyor...</div>
+                                <div class="loading">Loading devices...</div>
                             </div>
                             <button class="btn btn-secondary" onclick="refreshDevices()">
                                 <i class="fas fa-sync-alt"></i>
-                                Cihazları Yenile
+                                Refresh Devices
                             </button>
                         </div>
                     </div>
@@ -177,11 +177,11 @@
                     <!-- App Selection -->
                     <div class="card" id="app-selection" style="display: none;">
                         <div class="card-header">
-                            <h3><i class="fas fa-app-store"></i> Uygulama Seçimi</h3>
+                            <h3><i class="fas fa-app-store"></i> App Selection</h3>
                         </div>
                         <div class="card-body">
                             <div class="app-list" id="app-list">
-                                <div class="loading">Uygulamalar yükleniyor...</div>
+                                <div class="loading">Loading apps...</div>
                             </div>
                         </div>
                     </div>
@@ -189,10 +189,10 @@
                     <!-- Mobile Monitoring -->
                     <div class="card" id="mobile-monitoring" style="display: none;">
                         <div class="card-header">
-                            <h3><i class="fas fa-chart-line"></i> Performans İzleme</h3>
+                            <h3><i class="fas fa-chart-line"></i> Performance Monitoring</h3>
                             <div class="card-actions">
                                 <button class="btn btn-sm btn-danger" id="stop-monitoring-btn" onclick="stopMobileMonitoring()" style="display: none;">
-                                    <i class="fas fa-stop"></i> Durdur
+                                    <i class="fas fa-stop"></i> Stop
                                 </button>
                                 <button class="btn btn-sm btn-secondary" onclick="exportMobileReport('json')">
                                     <i class="fas fa-download"></i> JSON
@@ -206,15 +206,15 @@
                             <div class="metrics-grid">
                                 <div class="metric-card">
                                     <div class="metric-value" id="mobile-cpu">-</div>
-                                    <div class="metric-label">CPU Kullanımı (%)</div>
+                                    <div class="metric-label">CPU Usage (%)</div>
                                 </div>
                                 <div class="metric-card">
                                     <div class="metric-value" id="mobile-memory">-</div>
-                                    <div class="metric-label">RAM Kullanımı (MB)</div>
+                                    <div class="metric-label">RAM Usage (MB)</div>
                                 </div>
                                 <div class="metric-card">
                                     <div class="metric-value" id="mobile-battery">-</div>
-                                    <div class="metric-label">Batarya (%)</div>
+                                    <div class="metric-label">Battery (%)</div>
                                 </div>
                                 <div class="metric-card">
                                     <div class="metric-value" id="mobile-fps">-</div>
@@ -235,7 +235,7 @@
                     <!-- System Status -->
                     <div class="card">
                         <div class="card-header">
-                            <h3><i class="fas fa-server"></i> Sistem Durumu</h3>
+                            <h3><i class="fas fa-server"></i> System Status</h3>
                         </div>
                         <div class="card-body">
                             <div class="status-grid">
@@ -243,14 +243,14 @@
                                     <i class="fas fa-globe status-icon success"></i>
                                     <div class="status-info">
                                         <div class="status-label">Web Analyzer</div>
-                                        <div class="status-value" id="web-status">Başlatılıyor...</div>
+                                        <div class="status-value" id="web-status">Starting...</div>
                                     </div>
                                 </div>
                                 <div class="status-item">
                                     <i class="fas fa-mobile-alt status-icon warning"></i>
                                     <div class="status-info">
                                         <div class="status-label">Android Analyzer</div>
-                                        <div class="status-value" id="android-status">Kontrol ediliyor...</div>
+                                        <div class="status-value" id="android-status">Checking...</div>
                                     </div>
                                 </div>
                             </div>
@@ -260,11 +260,11 @@
                     <!-- Recent Reports -->
                     <div class="card">
                         <div class="card-header">
-                            <h3><i class="fas fa-history"></i> Son Raporlar</h3>
+                            <h3><i class="fas fa-history"></i> Recent Reports</h3>
                         </div>
                         <div class="card-body">
                             <div class="reports-list" id="reports-list">
-                                <div class="loading">Raporlar yükleniyor...</div>
+                                <div class="loading">Loading reports...</div>
                             </div>
                         </div>
                     </div>
@@ -277,7 +277,7 @@
     <div class="loading-overlay" id="loading-overlay">
         <div class="loading-spinner">
             <i class="fas fa-spinner fa-spin"></i>
-            <div class="loading-text">İşlem yapılıyor...</div>
+            <div class="loading-text">Processing...</div>
         </div>
     </div>
 
@@ -285,13 +285,13 @@
     <div class="modal" id="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="modal-title">Modal Başlık</h3>
+                <h3 id="modal-title">Modal Title</h3>
                 <button class="modal-close" onclick="closeModal()">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="modal-body" id="modal-body">
-                Modal içeriği
+                Modal content
             </div>
         </div>
     </div>

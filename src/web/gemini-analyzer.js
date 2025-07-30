@@ -109,7 +109,7 @@ Lütfen aşağıdaki başlıklar altında detaylı bir analiz yap:
 - Mevcut optimizasyonlar yapıldıktan sonra beklenen skorlar
 - Hedef performans seviyeleri
 
-Analizi Türkçe yap ve teknik terimleri açıkla. Kullanıcı dostu bir dil kullan ama profesyonel olsun.
+Analyze in the user's preferred language and explain technical terms. Use user-friendly language but keep it professional. If the user's language is not specified, respond in English.
 `;
     }
 

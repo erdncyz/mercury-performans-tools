@@ -1,257 +1,327 @@
 # Mercury Performance Tools ☿
 
-Mercury Performance Tools, web siteleri ve mobil uygulamalar için kapsamlı performans analiz ve izleme aracıdır. Modern web teknolojileri kullanarak gerçek zamanlı performans metrikleri toplar ve detaylı raporlar oluşturur.
+Mercury Performance Tools is a comprehensive performance analysis and monitoring tool for websites and mobile applications. It collects real-time performance metrics using modern web technologies and generates detailed reports.
 
-## 🚀 Özellikler
+## 🚀 Features
 
-### Web Performans Analizi
-- **Sayfa Yükleme Süresi**: Tam sayfa yükleme süresini ölçer
-- **Core Web Vitals**: FCP, LCP, CLS metriklerini hesaplar
-- **Navigation Timing**: DNS lookup, TCP connection, server response sürelerini analiz eder
-- **Resource Timing**: Tüm kaynakların yükleme sürelerini takip eder
-- **Performance Score**: Lighthouse benzeri performans skoru hesaplar
+### Web Performance Analysis
+- **Page Load Time**: Measures complete page load duration
+- **Core Web Vitals**: Calculates FCP, LCP, CLS metrics
+- **Navigation Timing**: Analyzes DNS lookup, TCP connection, server response times
+- **Resource Timing**: Tracks loading times of all resources
+- **Performance Score**: Calculates Lighthouse-like performance score
 
-### Mobil Performans İzleme
-- **Android Cihaz Desteği**: ADB ile bağlı Android cihazları otomatik tespit eder
-- **CPU Kullanımı**: Gerçek zamanlı CPU kullanım oranını izler
-- **Memory Kullanımı**: RAM kullanımını takip eder
-- **Battery Monitoring**: Batarya seviyesi ve sıcaklık izleme
-- **FPS Tracking**: Frame rate performansını ölçer
-- **App Performance**: Uygulama başlatma ve çalışma performansını analiz eder
+### Mobile Performance Monitoring
+- **Android Device Support**: Automatically detects Android devices connected via ADB
+- **CPU Usage**: Monitors real-time CPU usage rate
+- **Memory Usage**: Tracks RAM usage
+- **Battery Monitoring**: Battery level and temperature monitoring
+- **FPS Tracking**: Measures frame rate performance
+- **App Performance**: Analyzes application startup and runtime performance
 
-### Raporlama
-- **JSON Raporları**: Detaylı JSON formatında raporlar
-- **Mercury Performance Report**: Kendi geliştirdiğimiz Lighthouse CI tarzı raporlar
-- **PageSpeed Insights Report**: Google PageSpeed Insights API raporları
-- **Gemini AI Analysis Report**: AI destekli detaylı analiz raporları
-- **CSV Export**: Excel'de açılabilir CSV raporları
-- **Real-time Charts**: Canlı grafikler ve metrikler
+### Reporting
+- **JSON Reports**: Detailed reports in JSON format
+- **Mercury Performance Report**: Our own Lighthouse CI-style reports
+- **PageSpeed Insights Report**: Google PageSpeed Insights API reports
+- **Gemini AI Analysis Report**: AI-powered detailed analysis reports
+- **CSV Export**: Excel-compatible CSV reports
+- **Real-time Charts**: Live charts and metrics
 
-## 🛠️ Kurulum
+## 🛠️ Installation
 
-### Gereksinimler
+### Requirements
 - Node.js 16+ 
-- npm veya yarn
-- Android SDK (mobil analiz için)
+- npm or yarn
+- Android SDK (for mobile analysis)
 - ADB (Android Debug Bridge)
 
-### Kurulum Adımları
+### Installation Steps
 
-1. **Projeyi klonlayın**
+1. **Clone the project**
 ```bash
 git clone <repository-url>
 cd mercury-performance-tools
 ```
 
-2. **Bağımlılıkları yükleyin**
+2. **Install dependencies**
 ```bash
 npm install
 ```
 
-3. **Gerekli klasörleri oluşturun**
+3. **Create required directories**
 ```bash
 mkdir -p reports data
 ```
 
-4. **API Key'leri ayarlayın (opsiyonel)**
+4. **Set up API Keys (optional)**
 ```bash
-# .env dosyası oluşturun
+# Create .env file
 cp .env.example .env
 
-# API key'lerinizi .env dosyasına ekleyin:
+# Add your API keys to .env file:
 # PAGESPEED_API_KEY=your_pagespeed_api_key_here
 # GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
-5. **Android SDK kurulumu (opsiyonel)**
+5. **Android SDK installation (optional)**
 ```bash
-# Android Studio ile birlikte gelir
-# Veya sadece command line tools:
+# Comes with Android Studio
+# Or command line tools only:
 # https://developer.android.com/studio#command-tools
 ```
 
-## 🚀 Kullanım
+## 🚀 Usage
 
-### Web Uygulaması
+### Web Application
 ```bash
 npm start
 ```
-Tarayıcıda `http://localhost:3000` adresini açın.
+Open `http://localhost:3000` in your browser.
 
-### Development Modu
+### Development Mode
 ```bash
 npm run dev
 ```
 
-## 📊 Kullanım Kılavuzu
+## 📊 User Guide
 
-### Web Performans Analizi
+### Web Performance Analysis
 
-1. **Web Performans** sekmesine gidin
-2. Analiz etmek istediğiniz URL'yi girin
-3. **Analiz Et** butonuna tıklayın
-4. Sonuçları grafiklerde görüntüleyin
-5. İstediğiniz formatta rapor indirin
+1. Go to the **Web Performance** tab
+2. Enter the URL you want to analyze
+3. Click **Start Analysis** button
+4. View results in charts
+5. Download reports in your preferred format
 
-### Mobil Performans İzleme
+### Mobile Performance Monitoring
 
-1. **Mobil Performans** sekmesine gidin
-2. Android cihazınızı USB ile bağlayın
-3. **Cihazları Yenile** butonuna tıklayın
-4. Cihazınızı seçin
-5. İzlemek istediğiniz uygulamayı seçin
-6. **İzlemeyi Başlat** butonuna tıklayın
-7. Gerçek zamanlı metrikleri takip edin
+1. Go to the **Mobile Performance** tab
+2. Connect your Android device via USB
+3. Click **Refresh Devices** button
+4. Select your device
+5. Choose the application you want to monitor
+6. Click **Start Monitoring** button
+7. Track real-time metrics
 
 ### Dashboard
 
-- **Sistem Durumu**: Web ve Android analyzer'ların durumunu gösterir
-- **Son Raporlar**: Oluşturulan raporların listesi
-- **Hızlı Erişim**: Sık kullanılan işlemler
+- **System Status**: Shows status of Web and Android analyzers
+- **Recent Reports**: List of generated reports
+- **Quick Access**: Frequently used operations
 
-## 🔑 API Key Kurulumu
+## 🔑 API Key Setup
 
 ### Google PageSpeed Insights API
-PageSpeed Insights raporları için Google API key'i gereklidir:
+Google API key is required for PageSpeed Insights reports:
 
-1. **Google Cloud Console**'a gidin: https://console.cloud.google.com/
-2. **Yeni proje** oluşturun veya mevcut projeyi seçin
-3. **PageSpeed Insights API**'yi etkinleştirin
+1. Go to **Google Cloud Console**: https://console.cloud.google.com/
+2. Create a **new project** or select existing project
+3. Enable **PageSpeed Insights API**
 4. **Credentials** > **Create Credentials** > **API Key**
-5. API key'inizi `.env` dosyasına ekleyin:
+5. Add your API key to `.env` file:
 ```bash
 PAGESPEED_API_KEY=your_api_key_here
 ```
 
 ### Google Gemini AI API
-AI destekli analiz raporları için Gemini API key'i gereklidir:
+Gemini API key is required for AI-powered analysis reports:
 
-1. **Google AI Studio**'ya gidin: https://makersuite.google.com/app/apikey
-2. **Create API Key** butonuna tıklayın
-3. API key'inizi `.env` dosyasına ekleyin:
+1. Go to **Google AI Studio**: https://makersuite.google.com/app/apikey
+2. Click **Create API Key** button
+3. Add your API key to `.env` file:
 ```bash
 GEMINI_API_KEY=your_api_key_here
 ```
 
-### Güvenlik Notları
-- `.env` dosyası otomatik olarak `.gitignore`'a eklenmiştir
-- API key'lerinizi asla git repository'ye commit etmeyin
-- Production ortamında environment variable'ları güvenli şekilde yönetin
+### Security Notes
+- `.env` file is automatically added to `.gitignore`
+- Never commit API keys to git repository
+- Manage environment variables securely in production
 
 ## 🔧 API Endpoints
 
 ### Web Performance
-- `POST /api/web/analyze` - Web sitesi analizi
-- `POST /api/web/report` - Web raporu oluşturma
+- `GET /api/web/analyze` - Start web performance analysis
+- `GET /api/web/status/:id` - Get analysis status
+- `GET /api/web/report/:id` - Get analysis report
+- `GET /api/web/download/:id` - Download report
 
-### Android Performance
-- `GET /api/android/devices` - Bağlı cihazları listele
-- `POST /api/android/select-device` - Cihaz seç
-- `GET /api/android/apps` - Yüklü uygulamaları listele
-- `POST /api/android/start-monitoring` - İzlemeyi başlat
-- `POST /api/android/stop-monitoring` - İzlemeyi durdur
-- `GET /api/android/metrics` - Mevcut metrikleri al
-- `POST /api/android/report` - Android raporu oluştur
+### Mobile Performance
+- `GET /api/android/devices` - List connected devices
+- `POST /api/android/select-device` - Select device for monitoring
+- `GET /api/android/apps` - List installed apps
+- `POST /api/android/start-monitoring` - Start performance monitoring
+- `GET /api/android/status/:id` - Get monitoring status
+- `GET /api/android/report/:id` - Get monitoring report
 
-### Genel
-- `GET /api/status` - Sistem durumu
-- `GET /api/reports` - Rapor listesi
-- `GET /reports/:filename` - Rapor indir
+### Reports
+- `GET /api/reports` - List all generated reports
+- `GET /api/reports/:id` - Get specific report details
 
-## 📁 Proje Yapısı
+## 📁 Project Structure
 
 ```
 mercury-performance-tools/
 ├── src/
-│   ├── web-server.js           # Express web server
+│   ├── web-server.js          # Main server file
 │   ├── web/
-│   │   └── performance-analyzer.js  # Web performans analizi
+│   │   ├── performance-analyzer.js
+│   │   ├── browser-analyzer.js
+│   │   ├── pagespeed-analyzer.js
+│   │   ├── gemini-analyzer.js
+│   │   ├── lighthouse-ci-report.js
+│   │   ├── pagespeed-report.js
+│   │   └── gemini-report.js
 │   └── mobile/
-│       └── android-analyzer.js      # Android performans analizi
+│       └── android-analyzer.js
 ├── public/
-│   ├── index.html              # Ana HTML dosyası
+│   ├── index.html
 │   ├── css/
-│   │   └── style.css           # Stil dosyası
 │   └── js/
-│       ├── lib/
-│       │   ├── socket.io.js    # Local Socket.IO
-│       │   └── chart.js        # Local Chart.js
-│       └── app.js              # Frontend JavaScript
-├── reports/                    # Oluşturulan raporlar
-├── data/                       # Veri dosyaları
+├── reports/                   # Generated reports
+├── data/                      # Analysis data
+├── .env                       # Environment variables
 └── package.json
 ```
 
-## 🛠️ Teknolojiler
+## 🎯 Supported Browsers
 
-- **Backend**: Node.js, Express.js, Socket.IO
-- **Frontend**: Vanilla JavaScript, Chart.js
-- **Browser Automation**: Playwright
-- **Mobile Testing**: ADB (Android Debug Bridge)
-- **Styling**: CSS3, Flexbox, Grid
+- **Chrome**: Full support with performance metrics
+- **Firefox**: Full support with performance metrics
+- **Safari**: Full support with performance metrics
+- **Edge**: Full support with performance metrics
 
-## 📈 Performans Metrikleri
+## 📊 Report Types
 
-### Web Metrikleri
-- **Page Load Time**: Tam sayfa yükleme süresi
-- **First Contentful Paint (FCP)**: İlk içerik görüntüleme
-- **Largest Contentful Paint (LCP)**: En büyük içerik görüntüleme
-- **Cumulative Layout Shift (CLS)**: Layout kayması
-- **Time to Interactive (TTI)**: Etkileşim zamanı
-- **Speed Index**: Hız indeksi
+### 1. JSON Report
+Raw data in JSON format for programmatic analysis.
 
-### Mobil Metrikleri
-- **CPU Usage**: CPU kullanım oranı (%)
-- **Memory Usage**: RAM kullanımı (MB)
-- **Battery Level**: Batarya seviyesi (%)
-- **Temperature**: Cihaz sıcaklığı (°C)
-- **FPS**: Frame rate (fps)
-- **App Launch Time**: Uygulama başlatma süresi
+### 2. Mercury Performance Report
+Our own Lighthouse CI-style report with:
+- Performance scores
+- Core Web Vitals
+- Resource analysis
+- Error tracking
+- Navigation events
 
-## 🔍 Sorun Giderme
+### 3. PageSpeed Insights Report
+Google PageSpeed Insights API report with:
+- Mobile and Desktop analysis
+- Performance scores (Performance, Accessibility, Best Practices, SEO)
+- Core Web Vitals metrics
+- Optimization opportunities
+- Loading experience data
 
-### Web Analizi Çalışmıyor
-- Playwright browser'ının yüklü olduğundan emin olun
-- `npx playwright install chromium` komutunu çalıştırın
+### 4. Gemini AI Analysis Report
+AI-powered analysis report with:
+- Detailed performance evaluation
+- Mobile vs Desktop comparison
+- Optimization recommendations
+- Priority action items
+- Performance score predictions
 
-### Android Cihaz Bulunamıyor
-- ADB'nin kurulu olduğunu kontrol edin
-- Cihazın USB debugging modunda olduğundan emin olun
-- `adb devices` komutu ile cihazı test edin
+## 🚀 Advanced Features
 
-### Port Çakışması
-- 3000 portu kullanımdaysa `src/web-server.js` dosyasında portu değiştirin
+### Interactive Browser Analysis
+- Real browser automation with Playwright
+- Full-screen browser experience
+- User interaction tracking
+- SPA navigation detection
+- Comprehensive performance data collection
 
-## 🤝 Katkıda Bulunma
+### AI-Powered Analysis
+- Google Gemini AI integration
+- Intelligent performance evaluation
+- Automated recommendations
+- Multi-language support (AI responds in user's preferred language)
+- Priority-based action plans
 
-1. Fork yapın
-2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
-3. Commit yapın (`git commit -m 'Add amazing feature'`)
-4. Push yapın (`git push origin feature/amazing-feature`)
-5. Pull Request oluşturun
+### Real-time Monitoring
+- Live performance metrics
+- Real-time charts and graphs
+- Instant alerting
+- Continuous monitoring capabilities
 
-## 📄 Lisans
+## 🔧 Configuration
 
-Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için `LICENSE` dosyasına bakın.
+### Environment Variables
+```bash
+# Server Configuration
+PORT=3000
+NODE_ENV=development
 
-## 🆘 Destek
+# API Keys
+PAGESPEED_API_KEY=your_pagespeed_api_key
+GEMINI_API_KEY=your_gemini_api_key
+```
 
-Sorunlarınız için:
-- GitHub Issues kullanın
-- Dokümantasyonu kontrol edin
-- Stack Overflow'da arayın
+### Browser Arguments
+Customize browser launch arguments in `src/web/browser-analyzer.js`:
+```javascript
+// Chrome arguments
+args: [
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--disable-dev-shm-usage',
+    '--start-maximized',
+    '--disable-web-security',
+    '--kiosk' // Full screen mode
+]
+```
 
-## 🔮 Gelecek Özellikler
+## 🐛 Troubleshooting
 
-- [ ] iOS cihaz desteği
-- [ ] PDF rapor oluşturma
-- [ ] E-posta rapor gönderimi
-- [ ] Slack/Discord entegrasyonu
-- [ ] CI/CD pipeline entegrasyonu
-- [ ] Cloud deployment
-- [ ] Multi-user support
-- [ ] Advanced analytics dashboard
+### Common Issues
+
+1. **Port 3000 already in use**
+```bash
+# Kill process using port 3000
+lsof -ti:3000 | xargs kill -9
+```
+
+2. **Playwright browsers not installed**
+```bash
+npx playwright install chromium
+```
+
+3. **ADB not found**
+```bash
+# Install Android SDK and add to PATH
+export PATH=$PATH:$ANDROID_HOME/platform-tools
+```
+
+4. **API key errors**
+```bash
+# Check .env file exists and contains valid keys
+cat .env
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🙏 Acknowledgments
+
+- **Google PageSpeed Insights** for performance metrics
+- **Google Gemini AI** for intelligent analysis
+- **Playwright** for browser automation
+- **Chart.js** for data visualization
+
+## 📞 Support
+
+For support and questions:
+- Create an issue on GitHub
+- Check the documentation
+- Review troubleshooting section
 
 ---
 
-**Mercury Performance Tools** - Performans analizi için güçlü ve kullanıcı dostu web uygulaması ☿ 
+**Mercury Performance Tools** - Professional web and mobile performance analysis made simple! ☿ 
