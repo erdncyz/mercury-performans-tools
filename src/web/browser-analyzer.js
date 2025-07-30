@@ -740,11 +740,6 @@ class BrowserAnalyzer {
             const reportsDir = path.join(__dirname, '../../reports');
             await fs.mkdir(reportsDir, { recursive: true });
 
-            // JSON raporu oluştur
-            const jsonFilename = `browser-analysis-${sessionId}-${Date.now()}.json`;
-            const jsonReportPath = path.join(reportsDir, jsonFilename);
-            await fs.writeFile(jsonReportPath, JSON.stringify(reportData, null, 2));
-
             // Lighthouse CI HTML raporu oluştur
             const htmlReportPath = await this.lighthouseCIReport.generateHTMLReport(reportData);
 
@@ -770,11 +765,9 @@ class BrowserAnalyzer {
                 console.warn('❌ Gemini AI raporu oluşturulamadı:', error.message);
             }
 
-            console.log('JSON raporu oluşturuldu:', jsonReportPath);
             console.log('Mercury Performance HTML raporu oluşturuldu:', htmlReportPath);
             
             return {
-                json: jsonReportPath,
                 html: htmlReportPath,
                 pagespeed: pageSpeedReportPath,
                 gemini: geminiReportPath

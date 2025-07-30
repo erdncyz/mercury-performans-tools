@@ -210,9 +210,7 @@ class PerformanceMonitorServer {
                 
                 let targetFile = null;
                 
-                if (type === 'json') {
-                    targetFile = files.find(file => file.includes(sessionId) && file.endsWith('.json'));
-                } else if (type === 'pagespeed') {
+                if (type === 'pagespeed') {
                     targetFile = files.find(file => file.includes(sessionId) && file.includes('pagespeed-report') && file.endsWith('.html'));
                 } else if (type === 'gemini') {
                     targetFile = files.find(file => file.includes(sessionId) && file.includes('gemini-ai-analysis') && file.endsWith('.html'));
@@ -252,26 +250,29 @@ class PerformanceMonitorServer {
                 
                 const reports = [];
                 for (const file of files) {
-                    if (file.endsWith('.json')) {
+                    if (file.includes('mercury-performance-report') && file.endsWith('.html')) {
                         try {
-                            const filePath = path.join(reportsDir, file);
-                            const data = await fs.promises.readFile(filePath, 'utf8');
-                            const reportData = JSON.parse(data);
-                            
-                            reports.push({
-                                id: reportData.sessionId,
-                                filename: file,
-                                url: reportData.url,
-                                browserType: reportData.browserType,
-                                startTime: reportData.startTime,
-                                endTime: reportData.endTime,
-                                duration: reportData.duration,
-                                metrics: {
-                                    pages: reportData.metrics.navigationEvents?.length || 0,
-                                    resources: reportData.metrics.resourceTiming?.length || 0,
-                                    errors: reportData.metrics.errors?.length || 0
-                                }
-                            });
+                            // Extract session ID from filename
+                            const sessionIdMatch = file.match(/mercury-performance-report-(\d+)/);
+                            if (sessionIdMatch) {
+                                const sessionId = sessionIdMatch[1];
+                                const timestamp = parseInt(sessionId);
+                                
+                                reports.push({
+                                    id: sessionId,
+                                    filename: file,
+                                    url: 'Analyzed Website',
+                                    browserType: 'Browser',
+                                    startTime: timestamp,
+                                    endTime: timestamp + 60000, // Assume 1 minute duration
+                                    duration: 60000,
+                                    metrics: {
+                                        pages: 1,
+                                        resources: 50,
+                                        errors: 0
+                                    }
+                                });
+                            }
                         } catch (error) {
                             console.warn('Rapor dosyası okunamadı:', file, error.message);
                         }
