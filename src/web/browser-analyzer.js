@@ -214,8 +214,18 @@ class BrowserAnalyzer {
                         resources: resources.map(r => ({
                             name: r.name,
                             duration: r.duration,
-                            size: r.transferSize || 0,
-                            type: r.initiatorType
+                            transferSize: r.transferSize || 0,
+                            decodedBodySize: r.decodedBodySize || 0,
+                            initiatorType: r.initiatorType,
+                            nextHopProtocol: r.nextHopProtocol,
+                            domainLookupStart: r.domainLookupStart || 0,
+                            domainLookupEnd: r.domainLookupEnd || 0,
+                            connectStart: r.connectStart || 0,
+                            connectEnd: r.connectEnd || 0,
+                            requestStart: r.requestStart || 0,
+                            responseStart: r.responseStart || 0,
+                            responseEnd: r.responseEnd || 0,
+                            fetchStart: r.fetchStart || 0
                         }))
                     };
                 });
@@ -235,8 +245,18 @@ class BrowserAnalyzer {
                     session.metrics.resourceTiming.push({
                         url: resource.name,
                         duration: resource.duration,
-                        size: resource.size,
-                        type: resource.type,
+                        size: resource.transferSize || 0,
+                        decodedSize: resource.decodedBodySize || 0,
+                        type: resource.initiatorType,
+                        protocol: resource.nextHopProtocol,
+                        domainLookupStart: resource.domainLookupStart,
+                        domainLookupEnd: resource.domainLookupEnd,
+                        connectStart: resource.connectStart,
+                        connectEnd: resource.connectEnd,
+                        requestStart: resource.requestStart,
+                        responseStart: resource.responseStart,
+                        responseEnd: resource.responseEnd,
+                        fetchStart: resource.fetchStart,
                         timestamp: Date.now()
                     });
                 });
@@ -529,10 +549,18 @@ class BrowserAnalyzer {
                             resources: resources.map(r => ({
                                 name: r.name,
                                 duration: r.duration,
-                                transferSize: r.transferSize,
-                                decodedBodySize: r.decodedBodySize,
+                                transferSize: r.transferSize || 0,
+                                decodedBodySize: r.decodedBodySize || 0,
                                 initiatorType: r.initiatorType,
-                                nextHopProtocol: r.nextHopProtocol
+                                nextHopProtocol: r.nextHopProtocol,
+                                domainLookupStart: r.domainLookupStart || 0,
+                                domainLookupEnd: r.domainLookupEnd || 0,
+                                connectStart: r.connectStart || 0,
+                                connectEnd: r.connectEnd || 0,
+                                requestStart: r.requestStart || 0,
+                                responseStart: r.responseStart || 0,
+                                responseEnd: r.responseEnd || 0,
+                                fetchStart: r.fetchStart || 0
                             })),
                             memory: memory ? {
                                 usedJSHeapSize: memory.usedJSHeapSize,
@@ -577,6 +605,14 @@ class BrowserAnalyzer {
                             decodedSize: resource.decodedBodySize || 0,
                             type: resource.initiatorType,
                             protocol: resource.nextHopProtocol,
+                            domainLookupStart: resource.domainLookupStart,
+                            domainLookupEnd: resource.domainLookupEnd,
+                            connectStart: resource.connectStart,
+                            connectEnd: resource.connectEnd,
+                            requestStart: resource.requestStart,
+                            responseStart: resource.responseStart,
+                            responseEnd: resource.responseEnd,
+                            fetchStart: resource.fetchStart,
                             timestamp: Date.now()
                         });
                     });

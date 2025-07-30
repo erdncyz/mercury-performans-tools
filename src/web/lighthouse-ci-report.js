@@ -140,32 +140,36 @@ class LighthouseCIReport {
         const byDomain = {};
 
         resourceTiming.forEach(resource => {
-            const url = new URL(resource.url);
-            const protocol = url.protocol.replace(':', '');
-            const domain = url.hostname;
-            
-            // Network timing hesaplamaları
-            const dnsLookupTime = Math.round((resource.domainLookupEnd || 0) - (resource.domainLookupStart || 0));
-            const connectTime = Math.round((resource.connectEnd || 0) - (resource.connectStart || 0));
-            const responseTime = Math.round((resource.responseEnd || 0) - (resource.responseStart || 0));
-            const downloadTime = Math.round((resource.responseEnd || 0) - (resource.responseStart || 0));
-            const totalTime = Math.round((resource.responseEnd || 0) - (resource.fetchStart || 0));
+            try {
+                const url = new URL(resource.url);
+                const protocol = url.protocol.replace(':', '');
+                const domain = url.hostname;
+                
+                // Network timing hesaplamaları - daha güvenli hesaplama
+                const dnsLookupTime = Math.max(0, Math.round((resource.domainLookupEnd || 0) - (resource.domainLookupStart || 0)));
+                const connectTime = Math.max(0, Math.round((resource.connectEnd || 0) - (resource.connectStart || 0)));
+                const responseTime = Math.max(0, Math.round((resource.responseEnd || 0) - (resource.responseStart || 0)));
+                const downloadTime = Math.max(0, Math.round((resource.responseEnd || 0) - (resource.responseStart || 0)));
+                const totalTime = Math.max(0, Math.round((resource.responseEnd || 0) - (resource.fetchStart || 0)));
 
-            byProtocol[protocol] = (byProtocol[protocol] || 0) + 1;
-            byDomain[domain] = (byDomain[domain] || 0) + 1;
+                byProtocol[protocol] = (byProtocol[protocol] || 0) + 1;
+                byDomain[domain] = (byDomain[domain] || 0) + 1;
 
-            requests.push({
-                url: resource.url,
-                protocol,
-                domain,
-                dnsLookupTime,
-                connectTime,
-                responseTime,
-                downloadTime,
-                totalTime,
-                size: resource.size || 0,
-                status: resource.status
-            });
+                requests.push({
+                    url: resource.url,
+                    protocol,
+                    domain,
+                    dnsLookupTime,
+                    connectTime,
+                    responseTime,
+                    downloadTime,
+                    totalTime,
+                    size: resource.size || 0,
+                    status: resource.status || 200
+                });
+            } catch (error) {
+                console.warn('Resource timing parse error:', error.message);
+            }
         });
 
         const slowestRequests = requests
