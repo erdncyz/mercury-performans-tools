@@ -491,98 +491,116 @@ class BrowserAnalyzer {
         if (!session) return;
 
         try {
-            // Sayfa yüklendikten sonra 2 saniye bekle ve veri topla
-            await page.waitForTimeout(2000);
+            // Sayfa yüklendikten sonra 1 saniye bekle ve veri topla
+            await page.waitForTimeout(1000);
 
-            const additionalData = await page.evaluate(() => {
-                const navigation = performance.getEntriesByType('navigation')[0];
-                const paint = performance.getEntriesByType('paint');
-                const resources = performance.getEntriesByType('resource');
-                const memory = performance.memory;
-                
-                return {
-                    navigation: navigation ? {
-                        loadEventEnd: navigation.loadEventEnd,
-                        loadEventStart: navigation.loadEventStart,
-                        domContentLoadedEventEnd: navigation.domContentLoadedEventEnd,
-                        domContentLoadedEventStart: navigation.domContentLoadedEventStart,
-                        fetchStart: navigation.fetchStart,
-                        domainLookupStart: navigation.domainLookupStart,
-                        domainLookupEnd: navigation.domainLookupEnd,
-                        connectStart: navigation.connectStart,
-                        connectEnd: navigation.connectEnd,
-                        requestStart: navigation.requestStart,
-                        responseStart: navigation.responseStart,
-                        responseEnd: navigation.responseEnd,
-                        domLoading: navigation.domLoading,
-                        domInteractive: navigation.domInteractive,
-                        domContentLoaded: navigation.domContentLoaded,
-                        domComplete: navigation.domComplete
-                    } : null,
-                    paint: paint.map(p => ({
-                        name: p.name,
-                        startTime: p.startTime
-                    })),
-                    resources: resources.map(r => ({
-                        name: r.name,
-                        duration: r.duration,
-                        transferSize: r.transferSize,
-                        decodedBodySize: r.decodedBodySize,
-                        initiatorType: r.initiatorType,
-                        nextHopProtocol: r.nextHopProtocol
-                    })),
-                    memory: memory ? {
-                        usedJSHeapSize: memory.usedJSHeapSize,
-                        totalJSHeapSize: memory.totalJSHeapSize,
-                        jsHeapSizeLimit: memory.jsHeapSizeLimit
-                    } : null,
-                    timing: {
-                        navigationStart: performance.timing.navigationStart,
-                        loadEventEnd: performance.timing.loadEventEnd,
-                        domContentLoadedEventEnd: performance.timing.domContentLoadedEventEnd
+            // Sayfanın hala aktif olup olmadığını kontrol et
+            if (!page.isClosed()) {
+                const additionalData = await page.evaluate(() => {
+                    try {
+                        const navigation = performance.getEntriesByType('navigation')[0];
+                        const paint = performance.getEntriesByType('paint');
+                        const resources = performance.getEntriesByType('resource');
+                        const memory = performance.memory;
+                        
+                        return {
+                            navigation: navigation ? {
+                                loadEventEnd: navigation.loadEventEnd,
+                                loadEventStart: navigation.loadEventStart,
+                                domContentLoadedEventEnd: navigation.domContentLoadedEventEnd,
+                                domContentLoadedEventStart: navigation.domContentLoadedEventStart,
+                                fetchStart: navigation.fetchStart,
+                                domainLookupStart: navigation.domainLookupStart,
+                                domainLookupEnd: navigation.domainLookupEnd,
+                                connectStart: navigation.connectStart,
+                                connectEnd: navigation.connectEnd,
+                                requestStart: navigation.requestStart,
+                                responseStart: navigation.responseStart,
+                                responseEnd: navigation.responseEnd,
+                                domLoading: navigation.domLoading,
+                                domInteractive: navigation.domInteractive,
+                                domContentLoaded: navigation.domContentLoaded,
+                                domComplete: navigation.domComplete
+                            } : null,
+                            paint: paint.map(p => ({
+                                name: p.name,
+                                startTime: p.startTime
+                            })),
+                            resources: resources.map(r => ({
+                                name: r.name,
+                                duration: r.duration,
+                                transferSize: r.transferSize,
+                                decodedBodySize: r.decodedBodySize,
+                                initiatorType: r.initiatorType,
+                                nextHopProtocol: r.nextHopProtocol
+                            })),
+                            memory: memory ? {
+                                usedJSHeapSize: memory.usedJSHeapSize,
+                                totalJSHeapSize: memory.totalJSHeapSize,
+                                jsHeapSizeLimit: memory.jsHeapSizeLimit
+                            } : null,
+                            timing: {
+                                navigationStart: performance.timing.navigationStart,
+                                loadEventEnd: performance.timing.loadEventEnd,
+                                domContentLoadedEventEnd: performance.timing.domContentLoadedEventEnd
+                            }
+                        };
+                    } catch (e) {
+                        return {
+                            navigation: null,
+                            paint: [],
+                            resources: [],
+                            memory: null,
+                            timing: null,
+                            error: e.message
+                        };
                     }
-                };
-            });
-
-            // Navigation events'e ekle
-            if (additionalData.navigation) {
-                session.metrics.navigationEvents.push({
-                    type: 'detailed_navigation',
-                    timestamp: Date.now(),
-                    url: page.url(),
-                    data: additionalData.navigation
                 });
+
+                // Navigation events'e ekle
+                if (additionalData.navigation) {
+                    session.metrics.navigationEvents.push({
+                        type: 'detailed_navigation',
+                        timestamp: Date.now(),
+                        url: page.url(),
+                        data: additionalData.navigation
+                    });
+                }
+
+                // Resource timing'e ekle
+                if (additionalData.resources && additionalData.resources.length > 0) {
+                    additionalData.resources.forEach(resource => {
+                        session.metrics.resourceTiming.push({
+                            url: resource.name,
+                            duration: resource.duration,
+                            size: resource.transferSize || 0,
+                            decodedSize: resource.decodedBodySize || 0,
+                            type: resource.initiatorType,
+                            protocol: resource.nextHopProtocol,
+                            timestamp: Date.now()
+                        });
+                    });
+                }
+
+                // Memory usage'a ekle
+                if (additionalData.memory) {
+                    session.metrics.memoryUsage.push({
+                        ...additionalData.memory,
+                        timestamp: Date.now()
+                    });
+                }
+
+                console.log('Ek veri toplandı:', {
+                    resources: additionalData.resources ? additionalData.resources.length : 0,
+                    memory: !!additionalData.memory,
+                    navigation: !!additionalData.navigation
+                });
+            } else {
+                console.log('Sayfa kapatıldı, ek veri toplanamadı');
             }
-
-            // Resource timing'e ekle
-            additionalData.resources.forEach(resource => {
-                session.metrics.resourceTiming.push({
-                    url: resource.name,
-                    duration: resource.duration,
-                    size: resource.transferSize || 0,
-                    decodedSize: resource.decodedBodySize || 0,
-                    type: resource.initiatorType,
-                    protocol: resource.nextHopProtocol,
-                    timestamp: Date.now()
-                });
-            });
-
-            // Memory usage'a ekle
-            if (additionalData.memory) {
-                session.metrics.memoryUsage.push({
-                    ...additionalData.memory,
-                    timestamp: Date.now()
-                });
-            }
-
-            console.log('Ek veri toplandı:', {
-                resources: additionalData.resources.length,
-                memory: !!additionalData.memory,
-                navigation: !!additionalData.navigation
-            });
 
         } catch (error) {
-            console.error('Ek veri toplama hatası:', error);
+            console.log('Ek veri toplama hatası (normal):', error.message);
         }
     }
 
