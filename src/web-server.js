@@ -293,6 +293,80 @@ class PerformanceMonitorServer {
             }
         });
 
+        // Rapor sil
+        this.app.delete('/api/reports/:sessionId', async (req, res) => {
+            try {
+                const { sessionId } = req.params;
+                const reportsDir = path.join(__dirname, '../reports');
+                const files = await fs.readdir(reportsDir);
+                
+                // Session ID'ye göre ilgili dosyaları bul
+                const filesToDelete = files.filter(file => file.includes(sessionId));
+                
+                if (filesToDelete.length === 0) {
+                    return res.status(404).json({
+                        success: false,
+                        message: `No reports found for session ${sessionId}`
+                    });
+                }
+                
+                // Dosyaları sil
+                for (const file of filesToDelete) {
+                    const filePath = path.join(reportsDir, file);
+                    await fs.unlink(filePath);
+                    console.log(`Deleted report file: ${file}`);
+                }
+                
+                res.json({
+                    success: true,
+                    message: `Deleted ${filesToDelete.length} report(s) for session ${sessionId}`,
+                    deletedFiles: filesToDelete
+                });
+                
+            } catch (error) {
+                console.error('Rapor silme hatası:', error);
+                res.status(500).json({
+                    success: false,
+                    message: error.message
+                });
+            }
+        });
+
+        // Tüm raporları sil
+        this.app.delete('/api/reports', async (req, res) => {
+            try {
+                const reportsDir = path.join(__dirname, '../reports');
+                const files = await fs.readdir(reportsDir);
+                
+                if (files.length === 0) {
+                    return res.json({
+                        success: true,
+                        message: 'No reports to delete'
+                    });
+                }
+                
+                // Tüm dosyaları sil
+                for (const file of files) {
+                    const filePath = path.join(reportsDir, file);
+                    await fs.unlink(filePath);
+                    console.log(`Deleted report file: ${file}`);
+                }
+                
+                res.json({
+                    success: true,
+                    message: `Deleted all ${files.length} report(s)`,
+                    deletedFiles: files
+                });
+                
+            } catch (error) {
+                console.error('Tüm raporları silme hatası:', error);
+                res.status(500).json({
+                    success: false,
+                    message: error.message
+                });
+            }
+        });
+
 
 
 

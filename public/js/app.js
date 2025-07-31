@@ -385,30 +385,66 @@ function displayReports(reports) {
     modalTitle.textContent = '📊 Analysis Reports';
     
     if (reports.length === 0) {
-        modalBody.innerHTML = '<p>No reports yet.</p>';
+        modalBody.innerHTML = `
+            <div class="no-reports">
+                <i class="fas fa-file-alt"></i>
+                <h4>No Reports Available</h4>
+                <p>No analysis reports have been generated yet.</p>
+                <p>Start a new analysis to generate your first report!</p>
+            </div>
+        `;
     } else {
         modalBody.innerHTML = `
+            <div class="reports-header">
+                <div class="reports-count">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>${reports.length} Report${reports.length > 1 ? 's' : ''}</span>
+                </div>
+                <div class="reports-actions">
+                    <button class="btn btn-danger btn-sm" onclick="deleteAllReports()">
+                        <i class="fas fa-trash"></i> Delete All
+                    </button>
+                </div>
+            </div>
             <div class="reports-list">
                 ${reports.map(report => `
-                    <div class="report-item">
-                        <div class="report-header">
-                            <div class="report-title">
-                                <strong>${report.url}</strong>
-                                <span class="report-browser">${report.browserType}</span>
+                    <div class="report-item" data-session-id="${report.id}">
+                        <div class="report-info">
+                            <div class="report-header">
+                                <div class="report-title">
+                                    <strong>${report.url}</strong>
+                                    <span class="report-browser">${report.browserType}</span>
+                                </div>
+                                <div class="report-date">
+                                    <i class="fas fa-calendar"></i>
+                                    ${new Date(report.startTime).toLocaleString('en-US')}
+                                </div>
                             </div>
-                            <div class="report-date">
-                                ${new Date(report.startTime).toLocaleString('en-US')}
+                            <div class="report-metrics">
+                                <div class="metric">
+                                    <i class="fas fa-file"></i>
+                                    <span>${report.metrics.pages} pages</span>
+                                </div>
+                                <div class="metric">
+                                    <i class="fas fa-cogs"></i>
+                                    <span>${report.metrics.resources} resources</span>
+                                </div>
+                                <div class="metric">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <span>${report.metrics.errors} errors</span>
+                                </div>
+                                <div class="metric">
+                                    <i class="fas fa-clock"></i>
+                                    <span>${Math.round(report.duration / 1000)}s</span>
+                                </div>
                             </div>
-                        </div>
-                        <div class="report-metrics">
-                            <span class="metric">📄 ${report.metrics.pages} pages</span>
-                            <span class="metric">🔧 ${report.metrics.resources} resources</span>
-                            <span class="metric">⚠️ ${report.metrics.errors} errors</span>
-                            <span class="metric">⏱️ ${Math.round(report.duration / 1000)}s</span>
                         </div>
                         <div class="report-actions">
-                            <button class="btn btn-sm btn-primary" onclick="downloadReport('${report.id}', 'html')">
-                                <i class="fas fa-download"></i> HTML Report
+                            <button class="btn btn-primary btn-sm" onclick="downloadReport('${report.id}', 'html')" title="Download Report">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteReport('${report.id}')" title="Delete Report">
+                                <i class="fas fa-trash"></i>
                             </button>
                         </div>
                     </div>
@@ -418,6 +454,50 @@ function displayReports(reports) {
     }
     
     modal.classList.add('show');
+};
+
+// Delete single report
+window.deleteReport = function(sessionId) {
+    if (confirm('Are you sure you want to delete this report?')) {
+        fetch(`/api/reports/${sessionId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Report deleted successfully!');
+                showReports(); // Refresh the list
+            } else {
+                alert('Error deleting report: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Delete report error:', error);
+            alert('Error occurred while deleting report!');
+        });
+    }
+};
+
+// Delete all reports
+window.deleteAllReports = function() {
+    if (confirm('Are you sure you want to delete ALL reports? This action cannot be undone.')) {
+        fetch('/api/reports', {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('All reports deleted successfully!');
+                showReports(); // Refresh the list
+            } else {
+                alert('Error deleting reports: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Delete all reports error:', error);
+            alert('Error occurred while deleting reports!');
+        });
+    }
 };
 
 // Close modal
