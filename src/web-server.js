@@ -264,19 +264,50 @@ class PerformanceMonitorServer {
                                 
                                 const timestamp = new Date(parseInt(year), months[month], parseInt(day), parseInt(hours), parseInt(minutes)).getTime();
                                 
-                                reports.push({
-                                    id: timestamp.toString(),
-                                    filename: file,
+                                // Try to find corresponding JSON file for real data
+                                const jsonFilename = file.replace('.html', '.json');
+                                const jsonPath = path.join(reportsDir, jsonFilename);
+                                
+                                let reportData = {
                                     url: 'Analyzed Website',
                                     browserType: 'Browser',
-                                    startTime: timestamp,
-                                    endTime: timestamp + 60000, // Assume 1 minute duration
-                                    duration: 60000,
                                     metrics: {
                                         pages: 1,
                                         resources: 50,
                                         errors: 0
                                     }
+                                };
+                                
+                                try {
+                                    const jsonContent = await fs.readFile(jsonPath, 'utf8');
+                                    const sessionData = JSON.parse(jsonContent);
+                                    
+                                    if (sessionData.url) {
+                                        reportData.url = sessionData.url;
+                                    }
+                                    if (sessionData.browserType) {
+                                        reportData.browserType = sessionData.browserType;
+                                    }
+                                    if (sessionData.metrics) {
+                                        reportData.metrics = {
+                                            pages: sessionData.metrics.pageLoadTimes ? sessionData.metrics.pageLoadTimes.length : 1,
+                                            resources: sessionData.metrics.totalResources || 50,
+                                            errors: sessionData.metrics.totalErrors || 0
+                                        };
+                                    }
+                                } catch (jsonError) {
+                                    console.warn('JSON file not found or invalid:', jsonFilename);
+                                }
+                                
+                                reports.push({
+                                    id: timestamp.toString(),
+                                    filename: file,
+                                    url: reportData.url,
+                                    browserType: reportData.browserType,
+                                    startTime: timestamp,
+                                    endTime: timestamp + 60000, // Assume 1 minute duration
+                                    duration: 60000,
+                                    metrics: reportData.metrics
                                 });
                             }
                         } catch (error) {
