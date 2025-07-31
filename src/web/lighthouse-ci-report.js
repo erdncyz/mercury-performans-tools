@@ -66,17 +66,21 @@ class LighthouseCIReport {
             }).filter(t => t > 0);
         }
         
-        // Eğer hiç sayfa yükleme verisi yoksa, en az 1 sayfa varsay
+        // Eğer hiç sayfa yükleme verisi yoksa, resource timing'den hesapla
         if (allNavigations.length === 0 && resourceTiming.length > 0) {
+            // Resource timing'den ortalama yükleme süresini hesapla
+            const avgLoadTime = Math.round(resourceTiming.reduce((sum, r) => sum + (r.duration || 0), 0) / resourceTiming.length);
+            const actualLoadTime = Math.max(avgLoadTime, 500); // En az 500ms
+            
             allNavigations.push({
                 url: 'Analyzed Page',
                 type: 'page_load',
                 timestamp: Date.now(),
-                loadTime: 1000, // Varsayılan 1 saniye
-                firstPaint: 500,
-                firstContentfulPaint: 800
+                loadTime: actualLoadTime,
+                firstPaint: Math.round(actualLoadTime * 0.3),
+                firstContentfulPaint: Math.round(actualLoadTime * 0.6)
             });
-            pageLoadTimes.push(1000);
+            pageLoadTimes.push(actualLoadTime);
         }
         
         // Detaylı network analizi
@@ -677,6 +681,18 @@ class LighthouseCIReport {
             margin-bottom: 0.25rem;
         }
 
+        .metric .value.good {
+            color: #0f9d58;
+        }
+
+        .metric .value.warning {
+            color: #f4b400;
+        }
+
+        .metric .value.critical {
+            color: #db4437;
+        }
+
         .metric .label {
             font-size: 0.75rem;
             color: #5f6368;
@@ -711,6 +727,21 @@ class LighthouseCIReport {
         .status-good { color: #0cce6b; }
         .status-warning { color: #ffa400; }
         .status-error { color: #f44336; }
+
+        .table td.good {
+            color: #0f9d58;
+            font-weight: 500;
+        }
+
+        .table td.warning {
+            color: #f4b400;
+            font-weight: 500;
+        }
+
+        .table td.critical {
+            color: #db4437;
+            font-weight: 600;
+        }
 
         .chart-container {
             height: 300px;
@@ -824,15 +855,15 @@ class LighthouseCIReport {
             <h2>⚡ Page Load Analysis</h2>
             <div class="metrics-grid">
                 <div class="metric">
-                    <div class="value">${pageLoadAnalysis.averageLoadTime}ms</div>
+                    <div class="value ${pageLoadAnalysis.averageLoadTime > 3000 ? 'critical' : pageLoadAnalysis.averageLoadTime > 1500 ? 'warning' : 'good'}">${pageLoadAnalysis.averageLoadTime}ms</div>
                     <div class="label">Average Load Time</div>
                 </div>
                 <div class="metric">
-                    <div class="value">${pageLoadAnalysis.fastestLoad}ms</div>
+                    <div class="value ${pageLoadAnalysis.fastestLoad > 2000 ? 'critical' : pageLoadAnalysis.fastestLoad > 1000 ? 'warning' : 'good'}">${pageLoadAnalysis.fastestLoad}ms</div>
                     <div class="label">Fastest Load</div>
                 </div>
                 <div class="metric">
-                    <div class="value">${pageLoadAnalysis.slowestLoad}ms</div>
+                    <div class="value ${pageLoadAnalysis.slowestLoad > 5000 ? 'critical' : pageLoadAnalysis.slowestLoad > 3000 ? 'warning' : 'good'}">${pageLoadAnalysis.slowestLoad}ms</div>
                     <div class="label">Slowest Load</div>
                 </div>
             </div>
@@ -855,11 +886,12 @@ class LighthouseCIReport {
                              Math.round(page.detailedData.loadEventEnd - page.detailedData.loadEventStart) : 
                              page.loadTime;
                          const time = new Date(page.timestamp).toLocaleTimeString('tr-TR');
+                         const loadTimeClass = loadTime > 5000 ? 'critical' : loadTime > 3000 ? 'warning' : 'good';
                          return `
                          <tr>
                              <td>${page.url}</td>
                              <td><span class="status-${page.type === 'page_load' ? 'good' : 'warning'}">${page.type}</span></td>
-                             <td>${loadTime}ms</td>
+                             <td class="${loadTimeClass}">${loadTime}ms</td>
                              <td>${page.firstPaint}ms</td>
                              <td>${page.firstContentfulPaint}ms</td>
                              <td>${time}</td>
