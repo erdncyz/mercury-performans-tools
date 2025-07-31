@@ -301,37 +301,82 @@ class LighthouseCIReport {
     }
 
     calculatePerformanceScores(pageLoadTimes, resourceStats, errorStats) {
-        // Performance Score (0-100)
+        // Performance Score (0-100) - Daha gerçekçi hesaplama
         let performanceScore = 100;
         const avgLoadTime = pageLoadTimes.length > 0 ? 
             pageLoadTimes.reduce((sum, t) => sum + t, 0) / pageLoadTimes.length : 0;
         
-        if (avgLoadTime > 3000) performanceScore -= 40;
+        // Performance scoring based on load time
+        if (avgLoadTime > 5000) performanceScore -= 60;
+        else if (avgLoadTime > 3000) performanceScore -= 40;
         else if (avgLoadTime > 2000) performanceScore -= 25;
         else if (avgLoadTime > 1000) performanceScore -= 15;
+        else if (avgLoadTime > 500) performanceScore -= 5;
 
-        // Accessibility Score (0-100)
+        // Resource count penalty
+        const resourceCount = resourceStats.totalSize > 0 ? Object.values(resourceStats.byType).reduce((a, b) => a + b, 0) : 0;
+        if (resourceCount > 100) performanceScore -= 20;
+        else if (resourceCount > 50) performanceScore -= 10;
+        else if (resourceCount > 20) performanceScore -= 5;
+
+        // Accessibility Score (0-100) - Error based
         let accessibilityScore = 100;
-        if (errorStats.totalErrors > 10) accessibilityScore -= 30;
+        if (errorStats.totalErrors > 20) accessibilityScore -= 50;
+        else if (errorStats.totalErrors > 10) accessibilityScore -= 30;
         else if (errorStats.totalErrors > 5) accessibilityScore -= 20;
         else if (errorStats.totalErrors > 0) accessibilityScore -= 10;
 
-        // Best Practices Score (0-100)
+        // Best Practices Score (0-100) - Size and optimization based
         let bestPracticesScore = 100;
-        if (resourceStats.totalSize > 5000000) bestPracticesScore -= 30; // 5MB
+        
+        // Total size penalty
+        if (resourceStats.totalSize > 10000000) bestPracticesScore -= 40; // 10MB
+        else if (resourceStats.totalSize > 5000000) bestPracticesScore -= 30; // 5MB
         else if (resourceStats.totalSize > 2000000) bestPracticesScore -= 20; // 2MB
         else if (resourceStats.totalSize > 1000000) bestPracticesScore -= 10; // 1MB
 
-        // SEO Score (0-100)
+        // Resource optimization penalty
+        const imageCount = resourceStats.byType['Image'] || 0;
+        const jsCount = resourceStats.byType['JavaScript'] || 0;
+        const cssCount = resourceStats.byType['CSS'] || 0;
+
+        if (imageCount > 30) bestPracticesScore -= 15;
+        else if (imageCount > 15) bestPracticesScore -= 10;
+        else if (imageCount > 5) bestPracticesScore -= 5;
+
+        if (jsCount > 20) bestPracticesScore -= 15;
+        else if (jsCount > 10) bestPracticesScore -= 10;
+        else if (jsCount > 5) bestPracticesScore -= 5;
+
+        if (cssCount > 10) bestPracticesScore -= 10;
+        else if (cssCount > 5) bestPracticesScore -= 5;
+
+        // SEO Score (0-100) - Content and structure based
         let seoScore = 100;
-        if (pageLoadTimes.length === 0) seoScore -= 50;
-        else if (pageLoadTimes.length < 2) seoScore -= 20;
+        
+        // Page load data availability
+        if (pageLoadTimes.length === 0) seoScore -= 30;
+        else if (pageLoadTimes.length < 2) seoScore -= 15;
+
+        // Resource diversity penalty
+        const resourceTypes = Object.keys(resourceStats.byType).length;
+        if (resourceTypes < 3) seoScore -= 20;
+        else if (resourceTypes < 5) seoScore -= 10;
+
+        // Performance impact on SEO
+        if (avgLoadTime > 3000) seoScore -= 25;
+        else if (avgLoadTime > 2000) seoScore -= 15;
+        else if (avgLoadTime > 1000) seoScore -= 10;
+
+        // Error impact on SEO
+        if (errorStats.totalErrors > 5) seoScore -= 20;
+        else if (errorStats.totalErrors > 0) seoScore -= 10;
 
         return {
-            performance: Math.max(0, performanceScore),
-            accessibility: Math.max(0, accessibilityScore),
-            bestPractices: Math.max(0, bestPracticesScore),
-            seo: Math.max(0, seoScore)
+            performance: Math.max(0, Math.min(100, Math.round(performanceScore))),
+            accessibility: Math.max(0, Math.min(100, Math.round(accessibilityScore))),
+            bestPractices: Math.max(0, Math.min(100, Math.round(bestPracticesScore))),
+            seo: Math.max(0, Math.min(100, Math.round(seoScore)))
         };
     }
 
