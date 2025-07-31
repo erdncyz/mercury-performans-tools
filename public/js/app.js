@@ -418,68 +418,125 @@ function displayReports(reports) {
     if (reports.length === 0) {
         modalBody.innerHTML = `
             <div class="no-reports">
-                <i class="fas fa-file-alt"></i>
-                <h4>No Reports Available</h4>
-                <p>No analysis reports have been generated yet.</p>
-                <p>Start a new analysis to generate your first report!</p>
+                <div class="no-reports-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="no-reports-content">
+                    <h3>No Reports Available</h3>
+                    <p>No analysis reports have been generated yet.</p>
+                    <p>Start a new analysis to generate your first report!</p>
+                </div>
             </div>
         `;
     } else {
         modalBody.innerHTML = `
-            <div class="reports-header">
-                <div class="reports-count">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>${reports.length} Report${reports.length > 1 ? 's' : ''}</span>
-                </div>
-                <div class="reports-actions">
-                    <button class="btn btn-danger btn-sm" onclick="deleteAllReports()">
-                        <i class="fas fa-trash"></i> Delete All
-                    </button>
-                </div>
-            </div>
-            <div class="reports-list">
-                ${reports.map(report => `
-                    <div class="report-item" data-session-id="${report.id}">
-                        <div class="report-info">
-                            <div class="report-header">
-                                <div class="report-title">
-                                    <strong>${report.url}</strong>
-                                    <span class="report-browser">${report.browserType}</span>
-                                </div>
-                                <div class="report-date">
-                                    <i class="fas fa-calendar"></i>
-                                    ${new Date(report.startTime).toLocaleString('en-US')}
-                                </div>
-                            </div>
-                            <div class="report-metrics">
-                                <div class="metric">
-                                    <i class="fas fa-file"></i>
-                                    <span>${report.metrics.pages} pages</span>
-                                </div>
-                                <div class="metric">
-                                    <i class="fas fa-cogs"></i>
-                                    <span>${report.metrics.resources} resources</span>
-                                </div>
-                                <div class="metric">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                    <span>${report.metrics.errors} errors</span>
-                                </div>
-                                <div class="metric">
-                                    <i class="fas fa-clock"></i>
-                                    <span>${Math.round(report.duration / 1000)}s</span>
-                                </div>
-                            </div>
+            <div class="reports-container">
+                <div class="reports-header">
+                    <div class="reports-summary">
+                        <div class="reports-count">
+                            <i class="fas fa-chart-bar"></i>
+                            <span class="count-number">${reports.length}</span>
+                            <span class="count-label">Report${reports.length > 1 ? 's' : ''}</span>
                         </div>
-                        <div class="report-actions">
-                            <button class="btn btn-primary btn-sm" onclick="downloadReport('${report.id}', 'html')" title="Download Report">
-                                <i class="fas fa-download"></i>
-                            </button>
-                            <button class="btn btn-danger btn-sm" onclick="deleteReport('${report.id}')" title="Delete Report">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                        <div class="reports-stats">
+                            <div class="stat-item">
+                                <i class="fas fa-clock"></i>
+                                <span>Total Duration: ${Math.round(reports.reduce((sum, r) => sum + r.duration, 0) / 1000)}s</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-globe"></i>
+                                <span>${new Set(reports.map(r => r.url)).size} Unique Sites</span>
+                            </div>
                         </div>
                     </div>
-                `).join('')}
+                    <div class="reports-actions">
+                        <button class="btn btn-danger btn-sm" onclick="deleteAllReports()">
+                            <i class="fas fa-trash-alt"></i>
+                            <span>Delete All</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="reports-list">
+                    ${reports.map(report => `
+                        <div class="report-card" data-session-id="${report.id}">
+                            <div class="report-card-header">
+                                <div class="report-main-info">
+                                    <div class="report-url">
+                                        <i class="fas fa-link"></i>
+                                        <span class="url-text">${report.url}</span>
+                                    </div>
+                                    <div class="report-browser-badge">
+                                        <i class="fas fa-browser"></i>
+                                        <span>${report.browserType}</span>
+                                    </div>
+                                </div>
+                                <div class="report-timestamp">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <span>${new Date(report.startTime).toLocaleString('en-US', {
+                                        year: 'numeric',
+                                        month: 'short',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    })}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="report-card-body">
+                                <div class="report-metrics-grid">
+                                    <div class="metric-item">
+                                        <div class="metric-icon">
+                                            <i class="fas fa-file-alt"></i>
+                                        </div>
+                                        <div class="metric-content">
+                                            <div class="metric-value">${report.metrics.pages}</div>
+                                            <div class="metric-label">Pages</div>
+                                        </div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-icon">
+                                            <i class="fas fa-cogs"></i>
+                                        </div>
+                                        <div class="metric-content">
+                                            <div class="metric-value">${report.metrics.resources}</div>
+                                            <div class="metric-label">Resources</div>
+                                        </div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-icon ${report.metrics.errors > 0 ? 'error' : 'success'}">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                        </div>
+                                        <div class="metric-content">
+                                            <div class="metric-value ${report.metrics.errors > 0 ? 'error' : 'success'}">${report.metrics.errors}</div>
+                                            <div class="metric-label">Errors</div>
+                                        </div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-icon">
+                                            <i class="fas fa-stopwatch"></i>
+                                        </div>
+                                        <div class="metric-content">
+                                            <div class="metric-value">${Math.round(report.duration / 1000)}s</div>
+                                            <div class="metric-label">Duration</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="report-card-actions">
+                                <button class="action-btn download-btn" onclick="downloadReport('${report.id}', 'html')" title="Download Report">
+                                    <i class="fas fa-download"></i>
+                                    <span>Download</span>
+                                </button>
+                                <button class="action-btn delete-btn" onclick="deleteReport('${report.id}')" title="Delete Report">
+                                    <i class="fas fa-trash"></i>
+                                    <span>Delete</span>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
             </div>
         `;
     }
