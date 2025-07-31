@@ -132,6 +132,10 @@ function stopAnalysis() {
     })
     .then(response => response.json())
     .then(data => {
+        // Hide loading overlay first
+        const loadingOverlay = document.getElementById('loading-overlay');
+        loadingOverlay.classList.remove('show');
+        
         if (data.success) {
             document.getElementById('analysis-message').textContent = 'Analysis completed! Report ready.';
             
