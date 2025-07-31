@@ -112,6 +112,15 @@ function stopAnalysis() {
     
     console.log('=== Stopping Analysis ===');
     
+    // Show loading state
+    document.getElementById('analysis-message').textContent = 'Stopping analysis and generating report...';
+    document.getElementById('stop-analysis-btn').disabled = true;
+    document.getElementById('stop-analysis-btn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    
+    // Show loading overlay
+    const loadingOverlay = document.getElementById('loading-overlay');
+    loadingOverlay.classList.add('show');
+    
     fetch('/api/web/browser/stop', {
         method: 'POST',
         headers: {
@@ -233,7 +242,25 @@ function stopAnalysis() {
     .catch(error => {
         console.error('Analysis stop error:', error);
         document.getElementById('analysis-message').textContent = 'Error occurred while stopping analysis!';
+        
+        // Reset button state
+        document.getElementById('stop-analysis-btn').disabled = false;
+        document.getElementById('stop-analysis-btn').innerHTML = '<i class="fas fa-stop"></i> Stop Analysis';
+        
+        // Hide loading overlay
+        const loadingOverlay = document.getElementById('loading-overlay');
+        loadingOverlay.classList.remove('show');
+        
         currentAnalysis = null;
+    })
+    .finally(() => {
+        // Hide loading overlay
+        const loadingOverlay = document.getElementById('loading-overlay');
+        loadingOverlay.classList.remove('show');
+        
+        // Reset button state
+        document.getElementById('stop-analysis-btn').disabled = false;
+        document.getElementById('stop-analysis-btn').innerHTML = '<i class="fas fa-stop"></i> Stop Analysis';
     });
     
     // Clear intervals
