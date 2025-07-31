@@ -612,6 +612,16 @@ class LighthouseCIReport {
             white-space: nowrap;
         }
 
+        .url-cell {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.8rem;
+            color: #1a73e8;
+        }
+
         .table td:nth-child(3) { /* Path column */
             max-width: 200px;
             overflow: hidden;
@@ -894,36 +904,64 @@ class LighthouseCIReport {
             </div>
             
                          ${pageLoadAnalysis.pages.length > 0 ? `
-             <table class="table">
-                 <thead>
-                     <tr>
-                         <th>Page URL</th>
-                         <th>Type</th>
-                         <th>Load Time</th>
-                         <th>First Paint</th>
-                         <th>First Contentful Paint</th>
-                         <th>Timestamp</th>
-                     </tr>
-                 </thead>
-                 <tbody>
-                     ${pageLoadAnalysis.pages.map(page => {
-                         const loadTime = page.detailedData ? 
-                             Math.round(page.detailedData.loadEventEnd - page.detailedData.loadEventStart) : 
-                             page.loadTime;
-                         const time = new Date(page.timestamp).toLocaleTimeString('tr-TR');
-                         const loadTimeClass = loadTime > 5000 ? 'critical' : loadTime > 3000 ? 'warning' : 'good';
-                         return `
+             <div class="table-responsive">
+                 <table class="table">
+                     <thead>
                          <tr>
-                             <td>${page.url}</td>
-                             <td><span class="status-${page.type === 'page_load' ? 'good' : 'warning'}">${page.type}</span></td>
-                             <td class="${loadTimeClass}">${loadTime}ms</td>
-                             <td>${page.firstPaint}ms</td>
-                             <td>${page.firstContentfulPaint}ms</td>
-                             <td>${time}</td>
+                             <th>Page URL</th>
+                             <th>Type</th>
+                             <th>Load Time</th>
+                             <th>DOM Ready</th>
+                             <th>First Paint</th>
+                             <th>First Contentful Paint</th>
+                             <th>DNS Lookup</th>
+                             <th>Connect Time</th>
+                             <th>Response Time</th>
+                             <th>Timestamp</th>
                          </tr>
-                     `}).join('')}
-                 </tbody>
-             </table>
+                     </thead>
+                     <tbody>
+                         ${pageLoadAnalysis.pages.map(page => {
+                             const loadTime = page.detailedData ? 
+                                 Math.round(page.detailedData.loadEventEnd - page.detailedData.loadEventStart) : 
+                                 page.loadTime;
+                             const domReady = page.detailedData ? 
+                                 Math.round(page.detailedData.domContentLoadedEventEnd - page.detailedData.domContentLoadedEventStart) : 
+                                 0;
+                             const dnsLookup = page.detailedData ? 
+                                 Math.round(page.detailedData.domainLookupEnd - page.detailedData.domainLookupStart) : 
+                                 0;
+                             const connectTime = page.detailedData ? 
+                                 Math.round(page.detailedData.connectEnd - page.detailedData.connectStart) : 
+                                 0;
+                             const responseTime = page.detailedData ? 
+                                 Math.round(page.detailedData.responseEnd - page.detailedData.responseStart) : 
+                                 0;
+                             
+                             const time = new Date(page.timestamp).toLocaleTimeString('en-US');
+                             const loadTimeClass = loadTime > 5000 ? 'critical' : loadTime > 3000 ? 'warning' : 'good';
+                             const domReadyClass = domReady > 2000 ? 'critical' : domReady > 1000 ? 'warning' : 'good';
+                             const dnsClass = dnsLookup > 500 ? 'critical' : dnsLookup > 200 ? 'warning' : 'good';
+                             const connectClass = connectTime > 1000 ? 'critical' : connectTime > 500 ? 'warning' : 'good';
+                             const responseClass = responseTime > 2000 ? 'critical' : responseTime > 1000 ? 'warning' : 'good';
+                             
+                             return `
+                             <tr>
+                                 <td class="url-cell">${page.url}</td>
+                                 <td><span class="status-${page.type === 'page_load' ? 'good' : 'warning'}">${page.type}</span></td>
+                                 <td class="${loadTimeClass}">${loadTime}ms</td>
+                                 <td class="${domReadyClass}">${domReady}ms</td>
+                                 <td>${page.firstPaint}ms</td>
+                                 <td>${page.firstContentfulPaint}ms</td>
+                                 <td class="${dnsClass}">${dnsLookup}ms</td>
+                                 <td class="${connectClass}">${connectTime}ms</td>
+                                 <td class="${responseClass}">${responseTime}ms</td>
+                                 <td>${time}</td>
+                             </tr>
+                         `}).join('')}
+                     </tbody>
+                 </table>
+             </div>
              ` : '<p>No page load data available.</p>'}
         </div>
 
