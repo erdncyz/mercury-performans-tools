@@ -155,7 +155,7 @@
         </div>
     </div>
 
-    <!-- Modal -->
+    <!-- Reports Modal -->
     <div class="modal" id="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -166,6 +166,106 @@
             </div>
             <div class="modal-body" id="modal-body">
                 Modal content
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Delete Modal -->
+    <div class="modal" id="confirm-modal">
+        <div class="modal-content confirm-modal-content">
+            <div class="modal-header">
+                <h3 id="confirm-title">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Confirm Action
+                </h3>
+                <button class="modal-close" onclick="closeConfirmModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="confirm-content">
+                    <div class="confirm-icon">
+                        <i class="fas fa-trash-alt"></i>
+                    </div>
+                    <div class="confirm-message" id="confirm-message">
+                        Are you sure you want to perform this action?
+                    </div>
+                    <div class="confirm-description" id="confirm-description">
+                        This action cannot be undone.
+                    </div>
+                </div>
+                <div class="confirm-actions">
+                    <button class="btn btn-secondary" onclick="closeConfirmModal()">
+                        <i class="fas fa-times"></i>
+                        Cancel
+                    </button>
+                    <button class="btn btn-danger" id="confirm-action-btn">
+                        <i class="fas fa-trash"></i>
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal" id="success-modal">
+        <div class="modal-content success-modal-content">
+            <div class="modal-header">
+                <h3>
+                    <i class="fas fa-check-circle"></i>
+                    Success
+                </h3>
+                <button class="modal-close" onclick="closeSuccessModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="success-content">
+                    <div class="success-icon">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="success-message" id="success-message">
+                        Operation completed successfully!
+                    </div>
+                </div>
+                <div class="success-actions">
+                    <button class="btn btn-primary" onclick="closeSuccessModal()">
+                        <i class="fas fa-check"></i>
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal" id="error-modal">
+        <div class="modal-content error-modal-content">
+            <div class="modal-header">
+                <h3>
+                    <i class="fas fa-exclamation-circle"></i>
+                    Error
+                </h3>
+                <button class="modal-close" onclick="closeErrorModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="error-content">
+                    <div class="error-icon">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="error-message" id="error-message">
+                        An error occurred while performing the operation.
+                    </div>
+                </div>
+                <div class="error-actions">
+                    <button class="btn btn-primary" onclick="closeErrorModal()">
+                        <i class="fas fa-times"></i>
+                        OK
+                    </button>
+                </div>
             </div>
         </div>
     </div>

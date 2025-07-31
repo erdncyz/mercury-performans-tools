@@ -56,12 +56,12 @@ function startBrowserAnalysis() {
     const url = document.getElementById('web-url').value.trim();
     
     if (!url) {
-        alert('Please enter a URL!');
+        showErrorModal('Please enter a URL!');
         return;
     }
     
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        alert('Please enter a valid URL (must start with http:// or https://)!');
+        showErrorModal('Please enter a valid URL (must start with http:// or https://)!');
         return;
     }
     
@@ -397,12 +397,12 @@ window.showReports = function() {
             if (data.success) {
                 displayReports(data.reports);
             } else {
-                alert('Error loading reports: ' + data.message);
+                showErrorModal('Error loading reports: ' + data.message);
             }
         })
         .catch(error => {
             console.error('Reports loading error:', error);
-            alert('Error occurred while loading reports!');
+            showErrorModal('Error occurred while loading reports!');
         });
 };
 
@@ -543,48 +543,99 @@ function displayReports(reports) {
     modal.classList.add('show');
 };
 
+// Modern Modal Functions
+window.showConfirmModal = function(title, message, description, actionText, onConfirm) {
+    document.getElementById('confirm-title').innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${title}`;
+    document.getElementById('confirm-message').textContent = message;
+    document.getElementById('confirm-description').textContent = description;
+    document.getElementById('confirm-action-btn').innerHTML = `<i class="fas fa-trash"></i> ${actionText}`;
+    
+    // Set up confirm action
+    const confirmBtn = document.getElementById('confirm-action-btn');
+    confirmBtn.onclick = () => {
+        closeConfirmModal();
+        onConfirm();
+    };
+    
+    document.getElementById('confirm-modal').classList.add('show');
+};
+
+window.closeConfirmModal = function() {
+    document.getElementById('confirm-modal').classList.remove('show');
+};
+
+window.showSuccessModal = function(message) {
+    document.getElementById('success-message').textContent = message;
+    document.getElementById('success-modal').classList.add('show');
+};
+
+window.closeSuccessModal = function() {
+    document.getElementById('success-modal').classList.remove('show');
+};
+
+window.showErrorModal = function(message) {
+    document.getElementById('error-message').textContent = message;
+    document.getElementById('error-modal').classList.add('show');
+};
+
+window.closeErrorModal = function() {
+    document.getElementById('error-modal').classList.remove('show');
+};
+
 // Delete single report
 window.deleteReport = function(sessionId) {
-    if (confirm('Are you sure you want to delete this report?')) {
-        fetch(`/api/reports/${sessionId}`, {
-            method: 'DELETE'
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Report deleted successfully!');
-                showReports(); // Refresh the list
-            } else {
-                alert('Error deleting report: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Delete report error:', error);
-            alert('Error occurred while deleting report!');
-        });
-    }
+    showConfirmModal(
+        'Delete Report',
+        'Are you sure you want to delete this report?',
+        'This action cannot be undone.',
+        'Delete Report',
+        () => {
+            fetch(`/api/reports/${sessionId}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showSuccessModal('Report deleted successfully!');
+                    showReports(); // Refresh the list
+                } else {
+                    showErrorModal('Error deleting report: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Delete report error:', error);
+                showErrorModal('Error occurred while deleting report!');
+            });
+        }
+    );
 };
 
 // Delete all reports
 window.deleteAllReports = function() {
-    if (confirm('Are you sure you want to delete ALL reports? This action cannot be undone.')) {
-        fetch('/api/reports', {
-            method: 'DELETE'
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('All reports deleted successfully!');
-                showReports(); // Refresh the list
-            } else {
-                alert('Error deleting reports: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Delete all reports error:', error);
-            alert('Error occurred while deleting reports!');
-        });
-    }
+    showConfirmModal(
+        'Delete All Reports',
+        'Are you sure you want to delete ALL reports?',
+        'This action cannot be undone and will permanently remove all analysis reports.',
+        'Delete All',
+        () => {
+            fetch('/api/reports', {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showSuccessModal('All reports deleted successfully!');
+                    showReports(); // Refresh the list
+                } else {
+                    showErrorModal('Error deleting reports: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Delete all reports error:', error);
+                showErrorModal('Error occurred while deleting reports!');
+            });
+        }
+    );
 };
 
 // Close modal
