@@ -211,10 +211,10 @@ class PerformanceMonitorServer {
                 let targetFile = null;
                 
                 if (type === 'pagespeed') {
-                    targetFile = files.find(file => file.includes(sessionId) && file.includes('pagespeed-report') && file.endsWith('.html'));
+                    targetFile = files.find(file => file.includes('pagespeed-performans') && file.endsWith('.html'));
                 } else {
                     // Default to mercury performance report
-                    targetFile = files.find(file => file.includes(sessionId) && file.includes('mercury-performance-report') && file.endsWith('.html'));
+                    targetFile = files.find(file => file.includes('mercury-performans') && file.endsWith('.html'));
                 }
                 
                 console.log('Target file:', targetFile);
@@ -248,16 +248,24 @@ class PerformanceMonitorServer {
                 
                 const reports = [];
                 for (const file of files) {
-                    if (file.includes('mercury-performance-report') && file.endsWith('.html')) {
+                    if (file.includes('mercury-performans') && file.endsWith('.html')) {
                         try {
-                            // Extract session ID from filename
-                            const sessionIdMatch = file.match(/mercury-performance-report-(\d+)/);
-                            if (sessionIdMatch) {
-                                const sessionId = sessionIdMatch[1];
-                                const timestamp = parseInt(sessionId);
+                            // Extract date from filename
+                            const dateMatch = file.match(/mercury-performans-(\d{2}-\w+-\d{4}-\d{2}-\d{2})/);
+                            if (dateMatch) {
+                                const dateStr = dateMatch[1];
+                                const [day, month, year, hours, minutes] = dateStr.split('-');
+                                
+                                // Türkçe ay isimlerini sayıya çevir
+                                const months = {
+                                    'Ocak': 0, 'Şubat': 1, 'Mart': 2, 'Nisan': 3, 'Mayıs': 4, 'Haziran': 5,
+                                    'Temmuz': 6, 'Ağustos': 7, 'Eylül': 8, 'Ekim': 9, 'Kasım': 10, 'Aralık': 11
+                                };
+                                
+                                const timestamp = new Date(parseInt(year), months[month], parseInt(day), parseInt(hours), parseInt(minutes)).getTime();
                                 
                                 reports.push({
-                                    id: sessionId,
+                                    id: timestamp.toString(),
                                     filename: file,
                                     url: 'Analyzed Website',
                                     browserType: 'Browser',
