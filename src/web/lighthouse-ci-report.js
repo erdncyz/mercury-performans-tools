@@ -95,13 +95,20 @@ class LighthouseCIReport {
         // Performans skorları
         const performanceScores = this.calculatePerformanceScores(pageLoadTimes, resourceStats, errorStats);
 
+        // Gerçek verileri kullan
+        const realTotalPages = allNavigations.length;
+        const realTotalResources = resourceTiming.length;
+        const realTotalErrors = errors.length;
+        const realTotalSize = resourceStats.totalSize;
+        const realAverageLoadTime = pageLoadTimes.length > 0 ? 
+            Math.round(pageLoadTimes.reduce((sum, t) => sum + t, 0) / pageLoadTimes.length) : 0;
+
         return {
             performanceScores,
             pageLoadAnalysis: {
-                totalPages: allNavigations.length,
+                totalPages: realTotalPages,
                 totalPageLoads: pageLoads.length,
-                averageLoadTime: pageLoadTimes.length > 0 ? 
-                    Math.round(pageLoadTimes.reduce((sum, t) => sum + t, 0) / pageLoadTimes.length) : 0,
+                averageLoadTime: realAverageLoadTime,
                 fastestLoad: pageLoadTimes.length > 0 ? Math.min(...pageLoadTimes) : 0,
                 slowestLoad: pageLoadTimes.length > 0 ? Math.max(...pageLoadTimes) : 0,
                 pages: allNavigations.map(nav => ({
@@ -133,11 +140,12 @@ class LighthouseCIReport {
             resourceStats,
             errorStats,
             summary: {
-                totalPages: allNavigations.length,
-                totalResources: resourceTiming.length,
-                totalErrors: errors.length,
+                totalPages: realTotalPages,
+                totalResources: realTotalResources,
+                totalErrors: realTotalErrors,
                 totalClicks: clicks.length,
-                totalSize: resourceStats.totalSize,
+                totalSize: realTotalSize,
+                averageLoadTime: realAverageLoadTime,
                 averageMemoryUsage: memoryUsage.length > 0 ? 
                     Math.round(memoryUsage.reduce((sum, m) => sum + m.usedJSHeapSize, 0) / memoryUsage.length) : 0
             }

@@ -53,7 +53,11 @@ class BrowserAnalyzer {
                     consoleLogs: [],
                     clicks: [],
                     memoryUsage: [],
-                    cpuUsage: []
+                    cpuUsage: [],
+                    pageLoadTimes: [],
+                    totalResources: 0,
+                    totalErrors: 0,
+                    totalSize: 0
                 }
             });
             
@@ -249,7 +253,7 @@ class BrowserAnalyzer {
                 });
 
                 // Navigation event'i kaydet
-                session.metrics.navigationEvents.push({
+                const navigationEvent = {
                     type: 'page_load',
                     timestamp: Date.now(),
                     url: page.url(),
@@ -258,12 +262,18 @@ class BrowserAnalyzer {
                     firstPaint: performanceMetrics.firstPaint,
                     firstContentfulPaint: performanceMetrics.firstContentfulPaint,
                     data: performanceMetrics.navigationData
-                });
+                };
+                session.metrics.navigationEvents.push(navigationEvent);
+                
+                // Page load time'ı kaydet
+                if (performanceMetrics.pageLoadTime > 0) {
+                    session.metrics.pageLoadTimes.push(performanceMetrics.pageLoadTime);
+                }
 
                 // Resource timing data ekle
                 if (performanceMetrics.resources && performanceMetrics.resources.length > 0) {
                     performanceMetrics.resources.forEach(resource => {
-                        session.metrics.resourceTiming.push({
+                        const resourceData = {
                             url: resource.name,
                             duration: resource.duration,
                             size: resource.transferSize || 0,
@@ -279,7 +289,12 @@ class BrowserAnalyzer {
                             responseEnd: resource.responseEnd,
                             fetchStart: resource.fetchStart,
                             timestamp: Date.now()
-                        });
+                        };
+                        session.metrics.resourceTiming.push(resourceData);
+                        
+                        // Toplam kaynak sayısını ve boyutunu güncelle
+                        session.metrics.totalResources++;
+                        session.metrics.totalSize += resourceData.size;
                     });
                 }
 
@@ -432,13 +447,15 @@ class BrowserAnalyzer {
 
         // Error events with more details
         page.on('pageerror', (error) => {
-            session.metrics.errors.push({
+            const errorData = {
                 type: 'page_error',
                 message: error.message,
                 stack: error.stack,
                 timestamp: Date.now(),
                 url: page.url()
-            });
+            };
+            session.metrics.errors.push(errorData);
+            session.metrics.totalErrors++;
             console.error('Page error:', error.message);
         });
 
@@ -455,12 +472,14 @@ class BrowserAnalyzer {
             });
 
             if (type === 'error') {
-                session.metrics.errors.push({
+                const errorData = {
                     type: 'console_error',
                     message: text,
                     timestamp: Date.now(),
                     url: page.url()
-                });
+                };
+                session.metrics.errors.push(errorData);
+                session.metrics.totalErrors++;
             }
         });
 
