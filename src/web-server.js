@@ -301,24 +301,41 @@ class PerformanceMonitorServer {
             }
         });
 
-        // Rapor sil
-        this.app.delete('/api/reports/:sessionId', async (req, res) => {
+        // Delete single report by timestamp
+        this.app.delete('/api/reports/:timestamp', async (req, res) => {
             try {
-                const { sessionId } = req.params;
+                const { timestamp } = req.params;
                 const reportsDir = path.join(__dirname, '../reports');
                 const files = await fs.readdir(reportsDir);
                 
-                // Session ID'ye göre ilgili dosyaları bul
-                const filesToDelete = files.filter(file => file.includes(sessionId));
+                // Convert timestamp to date and find matching files
+                const targetDate = new Date(parseInt(timestamp));
+                const targetDateStr = targetDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+                
+                // Find files that match the date pattern
+                const filesToDelete = files.filter(file => {
+                    // Check if file contains the date pattern
+                    const dateMatch = file.match(/(\d{2})-(\w{3})-(\d{4})/);
+                    if (dateMatch) {
+                        const [, day, month, year] = dateMatch;
+                        const months = {
+                            'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '06',
+                            'Jul': '07', 'Aug': '08', 'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'
+                        };
+                        const fileDate = `${year}-${months[month]}-${day}`;
+                        return fileDate === targetDateStr;
+                    }
+                    return false;
+                });
                 
                 if (filesToDelete.length === 0) {
                     return res.status(404).json({
                         success: false,
-                        message: `No reports found for session ${sessionId}`
+                        message: `No reports found for timestamp ${timestamp}`
                     });
                 }
                 
-                // Dosyaları sil
+                // Delete files
                 for (const file of filesToDelete) {
                     const filePath = path.join(reportsDir, file);
                     await fs.unlink(filePath);
@@ -327,12 +344,12 @@ class PerformanceMonitorServer {
                 
                 res.json({
                     success: true,
-                    message: `Deleted ${filesToDelete.length} report(s) for session ${sessionId}`,
+                    message: `Deleted ${filesToDelete.length} report(s) for timestamp ${timestamp}`,
                     deletedFiles: filesToDelete
                 });
                 
             } catch (error) {
-                console.error('Rapor silme hatası:', error);
+                console.error('Report deletion error:', error);
                 res.status(500).json({
                     success: false,
                     message: error.message
