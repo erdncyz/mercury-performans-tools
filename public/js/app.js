@@ -121,6 +121,20 @@ function stopAnalysis() {
     const loadingOverlay = document.getElementById('loading-overlay');
     loadingOverlay.classList.add('show');
     
+    // Helper function to hide loading overlay and reset button
+    const hideLoadingAndReset = () => {
+        clearTimeout(loadingTimeout);
+        loadingOverlay.classList.remove('show');
+        document.getElementById('stop-analysis-btn').disabled = false;
+        document.getElementById('stop-analysis-btn').innerHTML = '<i class="fas fa-stop"></i> Stop Analysis';
+    };
+    
+    // Set a timeout to ensure loading overlay doesn't get stuck
+    const loadingTimeout = setTimeout(() => {
+        console.log('Loading timeout reached, hiding overlay');
+        hideLoadingAndReset();
+    }, 30000); // 30 seconds timeout
+    
     fetch('/api/web/browser/stop', {
         method: 'POST',
         headers: {
@@ -132,9 +146,8 @@ function stopAnalysis() {
     })
     .then(response => response.json())
     .then(data => {
-        // Hide loading overlay first
-        const loadingOverlay = document.getElementById('loading-overlay');
-        loadingOverlay.classList.remove('show');
+        // Hide loading overlay and reset button
+        hideLoadingAndReset();
         
         if (data.success) {
             document.getElementById('analysis-message').textContent = 'Analysis completed! Report ready.';
@@ -247,24 +260,10 @@ function stopAnalysis() {
         console.error('Analysis stop error:', error);
         document.getElementById('analysis-message').textContent = 'Error occurred while stopping analysis!';
         
-        // Reset button state
-        document.getElementById('stop-analysis-btn').disabled = false;
-        document.getElementById('stop-analysis-btn').innerHTML = '<i class="fas fa-stop"></i> Stop Analysis';
-        
-        // Hide loading overlay
-        const loadingOverlay = document.getElementById('loading-overlay');
-        loadingOverlay.classList.remove('show');
+        // Hide loading overlay and reset button
+        hideLoadingAndReset();
         
         currentAnalysis = null;
-    })
-    .finally(() => {
-        // Hide loading overlay
-        const loadingOverlay = document.getElementById('loading-overlay');
-        loadingOverlay.classList.remove('show');
-        
-        // Reset button state
-        document.getElementById('stop-analysis-btn').disabled = false;
-        document.getElementById('stop-analysis-btn').innerHTML = '<i class="fas fa-stop"></i> Stop Analysis';
     });
     
     // Clear intervals
