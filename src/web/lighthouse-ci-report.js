@@ -193,12 +193,10 @@ class LighthouseCIReport {
         });
 
         const slowestRequests = requests
-            .sort((a, b) => b.totalTime - a.totalTime)
-            .slice(0, 10);
+            .sort((a, b) => b.totalTime - a.totalTime);
 
         const fastestRequests = requests
-            .sort((a, b) => a.totalTime - b.totalTime)
-            .slice(0, 10);
+            .sort((a, b) => a.totalTime - b.totalTime);
 
         const totalRequests = requests.length;
         const averageResponseTime = Math.round(requests.reduce((sum, r) => sum + r.responseTime, 0) / totalRequests);
@@ -255,12 +253,10 @@ class LighthouseCIReport {
         });
 
         const slowestResources = resources
-            .sort((a, b) => b.duration - a.duration)
-            .slice(0, 5);
+            .sort((a, b) => b.duration - a.duration);
 
         const largestResources = resources
-            .sort((a, b) => b.size - a.size)
-            .slice(0, 5);
+            .sort((a, b) => b.size - a.size);
 
         return {
             totalSize,
@@ -737,10 +733,11 @@ class LighthouseCIReport {
             </div>
             
             ${networkAnalysis.slowestRequests.length > 0 ? `
-            <h3>Slowest Network Requests</h3>
+            <h3>All Network Requests (${networkAnalysis.slowestRequests.length} total)</h3>
             <table class="table">
                 <thead>
                     <tr>
+                        <th>#</th>
                         <th>URL</th>
                         <th>Protocol</th>
                         <th>Total Time</th>
@@ -751,8 +748,9 @@ class LighthouseCIReport {
                     </tr>
                 </thead>
                 <tbody>
-                    ${networkAnalysis.slowestRequests.map(req => `
+                    ${networkAnalysis.slowestRequests.map((req, index) => `
                     <tr>
+                        <td>${index + 1}</td>
                         <td>${req.url}</td>
                         <td>${req.protocol}</td>
                         <td>${req.totalTime}ms</td>
@@ -801,6 +799,32 @@ class LighthouseCIReport {
             <div class="chart-container">
                 <canvas id="resourceChart"></canvas>
             </div>
+            ` : ''}
+            
+            ${resourceStats.slowestResources.length > 0 ? `
+            <h3>All Resources (${resourceStats.slowestResources.length} total)</h3>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>URL</th>
+                        <th>Type</th>
+                        <th>Size</th>
+                        <th>Duration</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${resourceStats.slowestResources.map((resource, index) => `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${resource.url}</td>
+                        <td>${resource.type}</td>
+                        <td>${this.formatBytes(resource.size)}</td>
+                        <td>${Math.round(resource.duration)}ms</td>
+                    </tr>
+                    `).join('')}
+                </tbody>
+            </table>
             ` : ''}
         </div>
 

@@ -308,7 +308,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 🙏 Acknowledgments
 
 - **Google PageSpeed Insights** for performance metrics
-- **Google Gemini AI** for intelligent analysis
 - **Playwright** for browser automation
 - **Chart.js** for data visualization
 
