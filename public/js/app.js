@@ -133,7 +133,7 @@ function stopAnalysis() {
     const loadingTimeout = setTimeout(() => {
         console.log('Loading timeout reached, hiding overlay');
         hideLoadingAndReset();
-    }, 30000); // 30 seconds timeout
+    }, 15000); // 15 seconds timeout
     
     fetch('/api/web/browser/stop', {
         method: 'POST',
@@ -424,12 +424,12 @@ function displayReports(reports) {
                     <h3>No Reports Available</h3>
                     <p>No analysis reports have been generated yet.</p>
                     <p>Start a new analysis to generate your first report!</p>
-                </div>
+            </div>
             </div>
         `;
     } else {
         modalBody.innerHTML = `
-            <div class="reports-container">
+        <div class="reports-container">
                 <div class="reports-header">
                     <div class="reports-summary">
                         <div class="reports-count">
@@ -445,8 +445,8 @@ function displayReports(reports) {
                             <div class="stat-item">
                                 <i class="fas fa-globe"></i>
                                 <span>${new Set(reports.map(r => r.url)).size} Unique Sites</span>
-                            </div>
-                        </div>
+            </div>
+        </div>
                     </div>
                     <div class="reports-actions">
                         <button class="btn btn-danger btn-sm" onclick="deleteAllReports()">
@@ -468,8 +468,8 @@ function displayReports(reports) {
                                     <div class="report-browser-badge">
                                         <i class="fas fa-browser"></i>
                                         <span>${report.browserType}</span>
-                                    </div>
-                                </div>
+            </div>
+            </div>
                                 <div class="report-timestamp">
                                     <i class="fas fa-calendar-alt"></i>
                                     <span>${new Date(report.startTime).toLocaleString('en-US', {
@@ -479,8 +479,8 @@ function displayReports(reports) {
                                         hour: '2-digit',
                                         minute: '2-digit'
                                     })}</span>
-                                </div>
-                            </div>
+            </div>
+        </div>
                             
                             <div class="report-card-body">
                                 <div class="report-metrics-grid">

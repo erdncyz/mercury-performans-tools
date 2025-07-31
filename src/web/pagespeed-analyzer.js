@@ -21,7 +21,10 @@ class PageSpeedAnalyzer {
                 params.key = this.apiKey;
             }
 
-            const response = await axios.get(this.baseUrl, { params });
+            const response = await axios.get(this.baseUrl, { 
+                params,
+                timeout: 10000 // 10 saniye timeout
+            });
             
             if (response.data && response.data.lighthouseResult) {
                 return this.processPageSpeedData(response.data, url, strategy);

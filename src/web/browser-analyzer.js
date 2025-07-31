@@ -815,15 +815,20 @@ class BrowserAnalyzer {
             // Lighthouse CI HTML raporu oluştur
             const htmlReportPath = await this.lighthouseCIReport.generateHTMLReport(reportData);
 
-            // PageSpeed Insights raporu oluştur
+            // PageSpeed Insights raporu oluştur (timeout ile)
             let pageSpeedReportPath = null;
             let pageSpeedData = null;
             try {
-                pageSpeedData = await this.pageSpeedAnalyzer.generatePageSpeedReport(reportData);
+                const pageSpeedPromise = this.pageSpeedAnalyzer.generatePageSpeedReport(reportData);
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('PageSpeed API timeout')), 8000)
+                );
+                
+                pageSpeedData = await Promise.race([pageSpeedPromise, timeoutPromise]);
                 pageSpeedReportPath = await this.pageSpeedReport.generateHTMLReport(pageSpeedData);
                 console.log('PageSpeed Insights HTML raporu oluşturuldu:', pageSpeedReportPath);
             } catch (error) {
-                console.warn('PageSpeed Insights raporu oluşturulamadı:', error.message);
+                console.warn('PageSpeed Insights raporu oluşturulamadı (timeout veya hata):', error.message);
             }
 
             console.log('Mercury Performance HTML raporu oluşturuldu:', htmlReportPath);
