@@ -466,6 +466,35 @@ class LighthouseCIReport {
             letter-spacing: 0.5px;
         }
 
+        .pagination-controls {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .pagination-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #dadce0;
+            background: #fff;
+            color: #5f6368;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .pagination-btn:hover {
+            background: #f1f3f4;
+            border-color: #1a73e8;
+        }
+
+        .pagination-btn.active {
+            background: #1a73e8;
+            color: #fff;
+            border-color: #1a73e8;
+        }
+
         .section {
             background: #fff;
             border-radius: 8px;
@@ -734,7 +763,13 @@ class LighthouseCIReport {
             
             ${networkAnalysis.slowestRequests.length > 0 ? `
             <h3>All Network Requests (${networkAnalysis.slowestRequests.length} total)</h3>
-            <table class="table">
+            <div class="pagination-controls">
+                <button onclick="showNetworkPage(1)" class="pagination-btn active">1</button>
+                ${Array.from({length: Math.ceil(networkAnalysis.slowestRequests.length / 20)}, (_, i) => i + 1).slice(1).map(page => `
+                    <button onclick="showNetworkPage(${page})" class="pagination-btn">${page}</button>
+                `).join('')}
+            </div>
+            <table class="table" id="networkTable">
                 <thead>
                     <tr>
                         <th>#</th>
@@ -747,8 +782,8 @@ class LighthouseCIReport {
                         <th>Size</th>
                     </tr>
                 </thead>
-                <tbody>
-                    ${networkAnalysis.slowestRequests.map((req, index) => `
+                <tbody id="networkTableBody">
+                    ${networkAnalysis.slowestRequests.slice(0, 20).map((req, index) => `
                     <tr>
                         <td>${index + 1}</td>
                         <td>${req.url}</td>
@@ -762,6 +797,34 @@ class LighthouseCIReport {
                     `).join('')}
                 </tbody>
             </table>
+            <script>
+                const networkData = ${JSON.stringify(networkAnalysis.slowestRequests)};
+                const itemsPerPage = 20;
+                
+                function showNetworkPage(page) {
+                    const startIndex = (page - 1) * itemsPerPage;
+                    const endIndex = startIndex + itemsPerPage;
+                    const pageData = networkData.slice(startIndex, endIndex);
+                    
+                    const tbody = document.getElementById('networkTableBody');
+                    tbody.innerHTML = pageData.map((req, index) => \`
+                        <tr>
+                            <td>\${startIndex + index + 1}</td>
+                            <td>\${req.url}</td>
+                            <td>\${req.protocol}</td>
+                            <td>\${req.totalTime}ms</td>
+                            <td>\${req.dnsLookupTime}ms</td>
+                            <td>\${req.connectTime}ms</td>
+                            <td>\${req.responseTime}ms</td>
+                            <td>\${req.size} bytes</td>
+                        </tr>
+                    \`).join('');
+                    
+                    // Update pagination buttons
+                    document.querySelectorAll('.pagination-btn').forEach(btn => btn.classList.remove('active'));
+                    event.target.classList.add('active');
+                }
+            </script>
             ` : ''}
             
             ${Object.keys(networkAnalysis.byProtocol).length > 0 ? `
@@ -803,7 +866,13 @@ class LighthouseCIReport {
             
             ${resourceStats.slowestResources.length > 0 ? `
             <h3>All Resources (${resourceStats.slowestResources.length} total)</h3>
-            <table class="table">
+            <div class="pagination-controls">
+                <button onclick="showResourcePage(1)" class="pagination-btn active">1</button>
+                ${Array.from({length: Math.ceil(resourceStats.slowestResources.length / 20)}, (_, i) => i + 1).slice(1).map(page => `
+                    <button onclick="showResourcePage(${page})" class="pagination-btn">${page}</button>
+                `).join('')}
+            </div>
+            <table class="table" id="resourceTable">
                 <thead>
                     <tr>
                         <th>#</th>
@@ -813,8 +882,8 @@ class LighthouseCIReport {
                         <th>Duration</th>
                     </tr>
                 </thead>
-                <tbody>
-                    ${resourceStats.slowestResources.map((resource, index) => `
+                <tbody id="resourceTableBody">
+                    ${resourceStats.slowestResources.slice(0, 20).map((resource, index) => `
                     <tr>
                         <td>${index + 1}</td>
                         <td>${resource.url}</td>
@@ -825,6 +894,31 @@ class LighthouseCIReport {
                     `).join('')}
                 </tbody>
             </table>
+            <script>
+                const resourceData = ${JSON.stringify(resourceStats.slowestResources)};
+                const resourceItemsPerPage = 20;
+                
+                function showResourcePage(page) {
+                    const startIndex = (page - 1) * resourceItemsPerPage;
+                    const endIndex = startIndex + resourceItemsPerPage;
+                    const pageData = resourceData.slice(startIndex, endIndex);
+                    
+                    const tbody = document.getElementById('resourceTableBody');
+                    tbody.innerHTML = pageData.map((resource, index) => \`
+                        <tr>
+                            <td>\${startIndex + index + 1}</td>
+                            <td>\${resource.url}</td>
+                            <td>\${resource.type}</td>
+                            <td>\${resource.size} bytes</td>
+                            <td>\${Math.round(resource.duration)}ms</td>
+                        </tr>
+                    \`).join('');
+                    
+                    // Update pagination buttons
+                    document.querySelectorAll('.pagination-btn').forEach(btn => btn.classList.remove('active'));
+                    event.target.classList.add('active');
+                }
+            </script>
             ` : ''}
         </div>
 
