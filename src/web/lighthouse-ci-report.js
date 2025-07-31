@@ -6,11 +6,11 @@ class LighthouseCIReport {
         this.templateDir = path.join(__dirname, '../templates');
     }
 
-    // Türkçe tarih formatı oluştur
-    formatTurkishDate(date) {
+    // English date format
+    formatEnglishDate(date) {
         const months = [
-            'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-            'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
+            'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
         ];
         
         const day = date.getDate().toString().padStart(2, '0');
@@ -39,8 +39,8 @@ class LighthouseCIReport {
         const reportsDir = path.join(__dirname, '../../reports');
         await fs.mkdir(reportsDir, { recursive: true });
         
-        const turkishDate = this.formatTurkishDate(new Date());
-        const filename = `mercury-performans-${turkishDate}.html`;
+        const englishDate = this.formatEnglishDate(new Date());
+        const filename = `mercury-performance-${englishDate}.html`;
         const reportPath = path.join(reportsDir, filename);
         
         await fs.writeFile(reportPath, html);

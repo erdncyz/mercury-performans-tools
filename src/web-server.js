@@ -211,10 +211,10 @@ class PerformanceMonitorServer {
                 let targetFile = null;
                 
                 if (type === 'pagespeed') {
-                    targetFile = files.find(file => file.includes('pagespeed-performans') && file.endsWith('.html'));
+                    targetFile = files.find(file => file.includes('pagespeed-performance') && file.endsWith('.html'));
                 } else {
                     // Default to mercury performance report
-                    targetFile = files.find(file => file.includes('mercury-performans') && file.endsWith('.html'));
+                    targetFile = files.find(file => file.includes('mercury-performance') && file.endsWith('.html'));
                 }
                 
                 console.log('Target file:', targetFile);
@@ -248,18 +248,18 @@ class PerformanceMonitorServer {
                 
                 const reports = [];
                 for (const file of files) {
-                    if (file.includes('mercury-performans') && file.endsWith('.html')) {
+                    if (file.includes('mercury-performance') && file.endsWith('.html')) {
                         try {
                             // Extract date from filename
-                            const dateMatch = file.match(/mercury-performans-(\d{2}-\w+-\d{4}-\d{2}-\d{2})/);
+                            const dateMatch = file.match(/mercury-performance-(\d{2}-\w+-\d{4}-\d{2}-\d{2})/);
                             if (dateMatch) {
                                 const dateStr = dateMatch[1];
                                 const [day, month, year, hours, minutes] = dateStr.split('-');
                                 
-                                // Türkçe ay isimlerini sayıya çevir
+                                // Convert English month names to numbers
                                 const months = {
-                                    'Ocak': 0, 'Şubat': 1, 'Mart': 2, 'Nisan': 3, 'Mayıs': 4, 'Haziran': 5,
-                                    'Temmuz': 6, 'Ağustos': 7, 'Eylül': 8, 'Ekim': 9, 'Kasım': 10, 'Aralık': 11
+                                    'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+                                    'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
                                 };
                                 
                                 const timestamp = new Date(parseInt(year), months[month], parseInt(day), parseInt(hours), parseInt(minutes)).getTime();
