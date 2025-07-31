@@ -540,6 +540,96 @@ class LighthouseCIReport {
             border-color: #1a73e8;
         }
 
+        .table-responsive {
+            overflow-x: auto;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            font-size: 0.875rem;
+        }
+
+        .table th {
+            background: #f8f9fa;
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 600;
+            color: #5f6368;
+            border-bottom: 1px solid #dadce0;
+            white-space: nowrap;
+        }
+
+        .table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #f1f3f4;
+            vertical-align: top;
+        }
+
+        .table td:nth-child(1) { /* # column */
+            width: 40px;
+            text-align: center;
+            font-weight: 600;
+            color: #5f6368;
+        }
+
+        .table td:nth-child(2) { /* Domain column */
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .table td:nth-child(3) { /* Path column */
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .table td:nth-child(4),
+        .table td:nth-child(5),
+        .table td:nth-child(6),
+        .table td:nth-child(7) { /* Time columns */
+            width: 80px;
+            text-align: center;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.8rem;
+        }
+
+        .table td:nth-child(8) { /* Size column */
+            width: 100px;
+            text-align: right;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.8rem;
+        }
+
+        .table tr:hover {
+            background: #f8f9fa;
+        }
+
+        @media (max-width: 768px) {
+            .table-responsive {
+                font-size: 0.75rem;
+            }
+            
+            .table th,
+            .table td {
+                padding: 0.5rem 0.25rem;
+            }
+            
+            .table td:nth-child(2) {
+                max-width: 100px;
+            }
+            
+            .table td:nth-child(3) {
+                max-width: 120px;
+            }
+        }
+
         .section {
             background: #fff;
             border-radius: 8px;
@@ -814,34 +904,41 @@ class LighthouseCIReport {
                     <button onclick="showNetworkPage(${page})" class="pagination-btn">${page}</button>
                 `).join('')}
             </div>
-            <table class="table" id="networkTable">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>URL</th>
-                        <th>Protocol</th>
-                        <th>Total Time</th>
-                        <th>DNS Lookup</th>
-                        <th>Connect</th>
-                        <th>Response</th>
-                        <th>Size</th>
-                    </tr>
-                </thead>
-                <tbody id="networkTableBody">
-                    ${networkAnalysis.slowestRequests.slice(0, 20).map((req, index) => `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${req.url}</td>
-                        <td>${req.protocol}</td>
-                        <td>${req.totalTime}ms</td>
-                        <td>${req.dnsLookupTime}ms</td>
-                        <td>${req.connectTime}ms</td>
-                        <td>${req.responseTime}ms</td>
-                        <td>${this.formatBytes(req.size)}</td>
-                    </tr>
-                    `).join('')}
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="table" id="networkTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Domain</th>
+                            <th>Path</th>
+                            <th>Total</th>
+                            <th>DNS</th>
+                            <th>Connect</th>
+                            <th>Response</th>
+                            <th>Size</th>
+                        </tr>
+                    </thead>
+                    <tbody id="networkTableBody">
+                        ${networkAnalysis.slowestRequests.slice(0, 20).map((req, index) => {
+                            const url = new URL(req.url);
+                            const domain = url.hostname;
+                            const path = url.pathname.length > 30 ? url.pathname.substring(0, 30) + '...' : url.pathname;
+                            return `
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td title="${domain}">${domain}</td>
+                                <td title="${url.pathname}">${path}</td>
+                                <td>${req.totalTime}ms</td>
+                                <td>${req.dnsLookupTime}ms</td>
+                                <td>${req.connectTime}ms</td>
+                                <td>${req.responseTime}ms</td>
+                                <td>${this.formatBytes(req.size)}</td>
+                            </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
             <script>
                 const networkData = ${JSON.stringify(networkAnalysis.slowestRequests)};
                 const itemsPerPage = 20;
@@ -852,18 +949,23 @@ class LighthouseCIReport {
                     const pageData = networkData.slice(startIndex, endIndex);
                     
                     const tbody = document.getElementById('networkTableBody');
-                    tbody.innerHTML = pageData.map((req, index) => \`
-                        <tr>
-                            <td>\${startIndex + index + 1}</td>
-                            <td>\${req.url}</td>
-                            <td>\${req.protocol}</td>
-                            <td>\${req.totalTime}ms</td>
-                            <td>\${req.dnsLookupTime}ms</td>
-                            <td>\${req.connectTime}ms</td>
-                            <td>\${req.responseTime}ms</td>
-                            <td>\${req.size} bytes</td>
-                        </tr>
-                    \`).join('');
+                    tbody.innerHTML = pageData.map((req, index) => {
+                        const url = new URL(req.url);
+                        const domain = url.hostname;
+                        const path = url.pathname.length > 30 ? url.pathname.substring(0, 30) + '...' : url.pathname;
+                        return \`
+                            <tr>
+                                <td>\${startIndex + index + 1}</td>
+                                <td title="\${domain}">\${domain}</td>
+                                <td title="\${url.pathname}">\${path}</td>
+                                <td>\${req.totalTime}ms</td>
+                                <td>\${req.dnsLookupTime}ms</td>
+                                <td>\${req.connectTime}ms</td>
+                                <td>\${req.responseTime}ms</td>
+                                <td>\${req.size} bytes</td>
+                            </tr>
+                        \`;
+                    }).join('');
                     
                     // Update pagination buttons
                     document.querySelectorAll('.pagination-btn').forEach(btn => btn.classList.remove('active'));
