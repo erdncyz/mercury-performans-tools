@@ -319,11 +319,42 @@ class BrowserAnalyzer {
         page.on('framenavigated', async (frame) => {
             if (frame === page.mainFrame()) {
                 console.log('Sayfa değişti:', frame.url());
-                session.metrics.navigationEvents.push({
-                    type: 'navigation',
-                    timestamp: Date.now(),
-                    url: frame.url()
-                });
+                
+                // Yeni sayfa için performance metrics topla
+                try {
+                    const performanceMetrics = await page.evaluate(() => {
+                        const navigation = performance.getEntriesByType('navigation')[0];
+                        const paint = performance.getEntriesByType('paint');
+                        
+                        return {
+                            pageLoadTime: navigation ? navigation.loadEventEnd - navigation.loadEventStart : 0,
+                            domContentLoaded: navigation ? navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart : 0,
+                            firstPaint: paint.find(p => p.name === 'first-paint')?.startTime || 0,
+                            firstContentfulPaint: paint.find(p => p.name === 'first-contentful-paint')?.startTime || 0
+                        };
+                    });
+
+                    const navigationEvent = {
+                        type: 'navigation',
+                        timestamp: Date.now(),
+                        url: frame.url(),
+                        loadTime: performanceMetrics.pageLoadTime,
+                        domContentLoaded: performanceMetrics.domContentLoaded,
+                        firstPaint: performanceMetrics.firstPaint,
+                        firstContentfulPaint: performanceMetrics.firstContentfulPaint
+                    };
+                    
+                    session.metrics.navigationEvents.push(navigationEvent);
+                    
+                    // Page load time'ı kaydet (eğer geçerliyse)
+                    if (performanceMetrics.pageLoadTime > 0) {
+                        session.metrics.pageLoadTimes.push(performanceMetrics.pageLoadTime);
+                    }
+                    
+                    console.log('Navigation metrics:', frame.url(), 'Load time:', performanceMetrics.pageLoadTime, 'ms');
+                } catch (error) {
+                    console.error('Navigation metrics toplama hatası:', error);
+                }
             }
         });
 
@@ -358,11 +389,42 @@ class BrowserAnalyzer {
             if (msg.text().includes('spa-navigation')) {
                 const url = await page.evaluate(() => window.location.href);
                 console.log('SPA Navigation:', url);
-                session.metrics.navigationEvents.push({
-                    type: 'spa_navigation',
-                    timestamp: Date.now(),
-                    url: url
-                });
+                
+                // SPA navigation için performance metrics topla
+                try {
+                    const performanceMetrics = await page.evaluate(() => {
+                        const navigation = performance.getEntriesByType('navigation')[0];
+                        const paint = performance.getEntriesByType('paint');
+                        
+                        return {
+                            pageLoadTime: navigation ? navigation.loadEventEnd - navigation.loadEventStart : 0,
+                            domContentLoaded: navigation ? navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart : 0,
+                            firstPaint: paint.find(p => p.name === 'first-paint')?.startTime || 0,
+                            firstContentfulPaint: paint.find(p => p.name === 'first-contentful-paint')?.startTime || 0
+                        };
+                    });
+
+                    const spaEvent = {
+                        type: 'spa_navigation',
+                        timestamp: Date.now(),
+                        url: url,
+                        loadTime: performanceMetrics.pageLoadTime,
+                        domContentLoaded: performanceMetrics.domContentLoaded,
+                        firstPaint: performanceMetrics.firstPaint,
+                        firstContentfulPaint: performanceMetrics.firstContentfulPaint
+                    };
+                    
+                    session.metrics.navigationEvents.push(spaEvent);
+                    
+                    // Page load time'ı kaydet (eğer geçerliyse)
+                    if (performanceMetrics.pageLoadTime > 0) {
+                        session.metrics.pageLoadTimes.push(performanceMetrics.pageLoadTime);
+                    }
+                    
+                    console.log('SPA Navigation metrics:', url, 'Load time:', performanceMetrics.pageLoadTime, 'ms');
+                } catch (error) {
+                    console.error('SPA Navigation metrics toplama hatası:', error);
+                }
             }
         });
 
