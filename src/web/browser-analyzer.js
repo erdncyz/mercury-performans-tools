@@ -211,6 +211,24 @@ class BrowserAnalyzer {
                         domContentLoaded: navigation ? navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart : 0,
                         firstPaint: paint.find(p => p.name === 'first-paint')?.startTime || 0,
                         firstContentfulPaint: paint.find(p => p.name === 'first-contentful-paint')?.startTime || 0,
+                        navigationData: navigation ? {
+                            loadEventEnd: navigation.loadEventEnd,
+                            loadEventStart: navigation.loadEventStart,
+                            domContentLoadedEventEnd: navigation.domContentLoadedEventEnd,
+                            domContentLoadedEventStart: navigation.domContentLoadedEventStart,
+                            fetchStart: navigation.fetchStart,
+                            domainLookupStart: navigation.domainLookupStart,
+                            domainLookupEnd: navigation.domainLookupEnd,
+                            connectStart: navigation.connectStart,
+                            connectEnd: navigation.connectEnd,
+                            requestStart: navigation.requestStart,
+                            responseStart: navigation.responseStart,
+                            responseEnd: navigation.responseEnd,
+                            domLoading: navigation.domLoading,
+                            domInteractive: navigation.domInteractive,
+                            domContentLoaded: navigation.domContentLoaded,
+                            domComplete: navigation.domComplete
+                        } : null,
                         resources: resources.map(r => ({
                             name: r.name,
                             duration: r.duration,
@@ -230,6 +248,7 @@ class BrowserAnalyzer {
                     };
                 });
 
+                // Navigation event'i kaydet
                 session.metrics.navigationEvents.push({
                     type: 'page_load',
                     timestamp: Date.now(),
@@ -237,32 +256,35 @@ class BrowserAnalyzer {
                     loadTime: performanceMetrics.pageLoadTime,
                     domContentLoaded: performanceMetrics.domContentLoaded,
                     firstPaint: performanceMetrics.firstPaint,
-                    firstContentfulPaint: performanceMetrics.firstContentfulPaint
+                    firstContentfulPaint: performanceMetrics.firstContentfulPaint,
+                    data: performanceMetrics.navigationData
                 });
 
-                // Add resource timing data
-                performanceMetrics.resources.forEach(resource => {
-                    session.metrics.resourceTiming.push({
-                        url: resource.name,
-                        duration: resource.duration,
-                        size: resource.transferSize || 0,
-                        decodedSize: resource.decodedBodySize || 0,
-                        type: resource.initiatorType,
-                        protocol: resource.nextHopProtocol,
-                        domainLookupStart: resource.domainLookupStart,
-                        domainLookupEnd: resource.domainLookupEnd,
-                        connectStart: resource.connectStart,
-                        connectEnd: resource.connectEnd,
-                        requestStart: resource.requestStart,
-                        responseStart: resource.responseStart,
-                        responseEnd: resource.responseEnd,
-                        fetchStart: resource.fetchStart,
-                        timestamp: Date.now()
+                // Resource timing data ekle
+                if (performanceMetrics.resources && performanceMetrics.resources.length > 0) {
+                    performanceMetrics.resources.forEach(resource => {
+                        session.metrics.resourceTiming.push({
+                            url: resource.name,
+                            duration: resource.duration,
+                            size: resource.transferSize || 0,
+                            decodedSize: resource.decodedBodySize || 0,
+                            type: resource.initiatorType,
+                            protocol: resource.nextHopProtocol,
+                            domainLookupStart: resource.domainLookupStart,
+                            domainLookupEnd: resource.domainLookupEnd,
+                            connectStart: resource.connectStart,
+                            connectEnd: resource.connectEnd,
+                            requestStart: resource.requestStart,
+                            responseStart: resource.responseStart,
+                            responseEnd: resource.responseEnd,
+                            fetchStart: resource.fetchStart,
+                            timestamp: Date.now()
+                        });
                     });
-                });
+                }
 
                 console.log('Sayfa yüklendi:', page.url(), 'Load time:', performanceMetrics.pageLoadTime, 'ms');
-                console.log('Toplanan kaynak sayısı:', performanceMetrics.resources.length);
+                console.log('Toplanan kaynak sayısı:', performanceMetrics.resources ? performanceMetrics.resources.length : 0);
             } catch (error) {
                 console.error('Performance metrics toplama hatası:', error);
             }
