@@ -21,11 +21,46 @@ Mercury Performance Tools is a comprehensive web performance analysis and monito
 - **Performance Score**: Lighthouse-like performance scoring
 
 ### Advanced Reporting
-- **Mercury Performance Report**: Custom Lighthouse CI-style reports
+- **Mercury Performance Report**: Custom Lighthouse CI-style reports with comprehensive analysis
 - **PageSpeed Insights Report**: Google PageSpeed Insights API integration
 - **Gemini AI Analysis Report**: AI-powered performance analysis and recommendations
 - **JSON Reports**: Raw data for programmatic analysis
 - **Real-time Charts**: Live visualization of performance metrics
+
+### Performance Score & Recommendations
+- **Lighthouse-style Scoring**: 0-100 performance rating system
+- **Automatic Recommendations**: AI-powered optimization suggestions
+- **Critical Issues Detection**: High-priority performance problems
+- **Warning Alerts**: Medium-priority optimization opportunities
+- **Information Insights**: Helpful performance tips and best practices
+
+### Resource Optimization Analysis
+- **Duplicate Request Detection**: Identifies redundant network requests
+- **CDN Usage Analysis**: Content Delivery Network utilization tracking
+- **Compression Analysis**: Gzip/Brotli compression effectiveness
+- **Caching Strategy**: Browser and server caching optimization
+- **Resource Bundling**: JavaScript and CSS bundling recommendations
+
+### Performance Timeline Analysis
+- **Waterfall Charts**: Chrome DevTools-style resource loading timeline
+- **Critical Rendering Path**: Performance bottleneck identification
+- **First Paint Metrics**: FCP, FMP, LCP timing analysis
+- **DOM Loading Events**: DOMContentLoaded and load event tracking
+- **Resource Impact Assessment**: High, medium, low impact classification
+
+### Error Analysis & Debugging
+- **JavaScript Error Tracking**: Detailed error analysis with line numbers
+- **Network Error Monitoring**: HTTP status codes and connection issues
+- **Console Warning Analysis**: Browser console warning patterns
+- **Error Pattern Recognition**: Most common error identification
+- **Debugging Information**: Detailed error context and suggestions
+
+### Security & Best Practices
+- **HTTPS Usage Analysis**: Secure connection percentage tracking
+- **Security Headers Check**: CSP, HSTS, X-Frame-Options validation
+- **Third-party Script Analysis**: External script security assessment
+- **Security Risk Assessment**: Potential security vulnerabilities
+- **Best Practices Compliance**: Web security standards adherence
 
 ## 🛠️ Installation
 
@@ -69,16 +104,40 @@ npx playwright install chromium firefox webkit
 
 ## 🚀 Usage
 
-### Start the Application
+### Start the Application (Network Access)
 ```bash
 npm start
 ```
-Open `http://localhost:3000` in your browser.
+This starts the server with network access enabled. Open `http://localhost:3000` in your browser.
 
-### Development Mode
+**Network Access URLs:**
+- Local: `http://localhost:3000`
+- Network: `http://[YOUR_IP]:3000`
+
+To see available network IP addresses:
+```bash
+npm run network-info
+```
+
+### Local Only Access
+```bash
+npm run local
+```
+This starts the server only for localhost access.
+
+### Development Mode (Network Access)
 ```bash
 npm run dev
 ```
+This starts the development server with network access enabled.
+
+### Local Development Mode
+```bash
+npm run local-dev
+```
+This starts the development server only for localhost access.
+
+**Security Note:** The default `npm start` and `npm run dev` commands now enable network access. Use firewall rules to restrict access if needed.
 
 ## 📊 User Guide
 
@@ -184,13 +243,20 @@ mercury-performance-tools/
 ## 📊 Report Types
 
 ### 1. Mercury Performance Report
-Our custom Lighthouse CI-style report featuring:
-- **Performance Scores**: Overall performance rating
-- **Core Web Vitals**: FCP, LCP, CLS metrics
-- **Resource Analysis**: Detailed resource loading breakdown
-- **Navigation Events**: All page visits and SPA navigations
-- **Error Tracking**: Console errors and network issues
-- **Memory Usage**: Browser memory consumption data
+Our comprehensive Lighthouse CI-style report featuring:
+- **Performance Scores**: Overall performance rating with detailed breakdown
+- **Core Web Vitals**: FCP, LCP, CLS metrics with visual indicators
+- **Resource Analysis**: Detailed resource loading breakdown with optimization suggestions
+- **Navigation Events**: All page visits and SPA navigations with timing data
+- **Error Tracking**: Console errors and network issues with debugging information
+- **Memory Usage**: Browser memory consumption data and optimization tips
+- **Performance Recommendations**: AI-powered optimization suggestions with priority levels
+- **Resource Optimization**: CDN usage, compression analysis, and duplicate request detection
+- **Performance Timeline**: Waterfall charts and critical rendering path analysis
+- **Error Analysis**: Detailed JavaScript and network error analysis with patterns
+- **Security Assessment**: HTTPS usage, security headers, and third-party script analysis
+- **Interactive Sorting**: Sort network requests by duration, size, status, and more
+- **Show All View**: Display all network requests in a single page with comprehensive sorting
 
 ### 2. PageSpeed Insights Report
 Google PageSpeed Insights API report with:
@@ -243,7 +309,29 @@ Raw data export for:
 ```bash
 # Server Configuration
 PORT=3000
+HOST=0.0.0.0
 NODE_ENV=development
+
+# Network Configuration
+ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://0.0.0.0:3000
+
+# Performance Analysis Settings
+BROWSER_TIMEOUT=30000
+ANALYSIS_TIMEOUT=60000
+MAX_CONCURRENT_ANALYSES=5
+
+# Report Settings
+REPORTS_DIR=./reports
+MAX_REPORTS=100
+
+# Security Settings
+ENABLE_CORS=true
+ENABLE_HELMET=true
+TRUST_PROXY=true
+
+# Logging
+LOG_LEVEL=info
+ENABLE_REQUEST_LOGGING=true
 
 # API Keys
 PAGESPEED_API_KEY=your_pagespeed_api_key

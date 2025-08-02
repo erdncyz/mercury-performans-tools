@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="robots" content="noindex, nofollow">
     <title>Mercury Performance Tools ☿ - Performance Tracking and Analysis</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☿</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -272,6 +274,24 @@
     </div>
 
     <!-- Scripts -->
+    <script>
+        // Prevent React DevTools errors
+        window.addEventListener('error', function(e) {
+            if (e.message && e.message.includes('React')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+        
+        // Prevent console errors from DevTools
+        const originalError = console.error;
+        console.error = function(...args) {
+            if (args[0] && typeof args[0] === 'string' && args[0].includes('React')) {
+                return;
+            }
+            originalError.apply(console, args);
+        };
+    </script>
     <script src="js/lib/socket.io.js"></script>
     <script src="js/lib/chart.js"></script>
     <script src="js/app.js"></script>

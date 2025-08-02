@@ -4,9 +4,14 @@
   "description": "Mercury Performance Tools - Web ve Mobil Performans Takip ve Analiz Uygulaması",
   "main": "src/web-server.js",
   "scripts": {
-    "start": "node src/web-server.js",
-    "dev": "nodemon src/web-server.js",
+    "start": "HOST=0.0.0.0 node src/web-server.js",
+    "dev": "HOST=0.0.0.0 nodemon src/web-server.js",
     "web": "node src/web-server.js",
+    "local": "HOST=localhost node src/web-server.js",
+    "local-dev": "HOST=localhost nodemon src/web-server.js",
+    "network": "HOST=0.0.0.0 node src/web-server.js",
+    "network-dev": "HOST=0.0.0.0 nodemon src/web-server.js",
+    "network-info": "node scripts/network-info.js",
     "test": "jest"
   },
   "keywords": [

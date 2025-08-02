@@ -16,7 +16,7 @@ class BrowserAnalyzer {
 
     async startAnalysis(url, browserType) {
         try {
-            console.log(`${browserType} tarayıcısı başlatılıyor...`);
+    
             
             const sessionId = Date.now().toString();
             const browser = await this.launchBrowser(browserType);
@@ -28,10 +28,29 @@ class BrowserAnalyzer {
             const context = await browser.newContext({
                 viewport: null, // Tam ekran için viewport'u kaldır
                 userAgent: this.getUserAgent(browserType),
-                ignoreHTTPSErrors: true
+                ignoreHTTPSErrors: true,
+                // Bot tespiti önleme için gelişmiş ayarlar
+                extraHTTPHeaders: {
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'Accept-Language': 'tr-TR,tr;q=0.9,en;q=0.8',
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache',
+                    'Sec-Ch-Ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+                    'Sec-Ch-Ua-Mobile': '?0',
+                    'Sec-Ch-Ua-Platform': '"Windows"',
+                    'Sec-Fetch-Dest': 'document',
+                    'Sec-Fetch-Mode': 'navigate',
+                    'Sec-Fetch-Site': 'none',
+                    'Sec-Fetch-User': '?1',
+                    'Upgrade-Insecure-Requests': '1'
+                }
             });
             
             const page = await context.newPage();
+            
+            // Network traffic listeners ekle (önce network, sonra performance)
+            await this.setupNetworkListeners(page);
             
             // Performance listeners ekle
             await this.setupPerformanceListeners(page);
@@ -57,7 +76,10 @@ class BrowserAnalyzer {
                     pageLoadTimes: [],
                     totalResources: 0,
                     totalErrors: 0,
-                    totalSize: 0
+                    totalSize: 0,
+                    networkRequests: [],
+                    networkResponses: [],
+                    networkErrors: []
                 }
             });
             
@@ -67,9 +89,72 @@ class BrowserAnalyzer {
                     waitUntil: 'domcontentloaded', 
                     timeout: 30000 
                 });
-                console.log(`${browserType} tarayıcısı açıldı ve ${url} yüklendi`);
+
+                // Bot tespiti önleme için JavaScript kodları
+                await page.evaluate(() => {
+                    // WebDriver özelliğini gizle
+                    Object.defineProperty(navigator, 'webdriver', {
+                        get: () => undefined,
+                    });
+
+                    // Chrome runtime özelliğini gizle
+                    Object.defineProperty(navigator, 'plugins', {
+                        get: () => [1, 2, 3, 4, 5],
+                    });
+
+                    // Permissions API'yi gizle
+                    Object.defineProperty(navigator, 'permissions', {
+                        get: () => undefined,
+                    });
+
+                    // Automation özelliklerini gizle
+                    delete window.cdc_adoQpoasnfa76pfcZLmcfl_Array;
+                    delete window.cdc_adoQpoasnfa76pfcZLmcfl_Promise;
+                    delete window.cdc_adoQpoasnfa76pfcZLmcfl_Symbol;
+
+                    // Chrome otomasyon özelliklerini gizle
+                    if (window.chrome) {
+                        delete window.chrome.runtime;
+                    }
+
+                    // User agent string'ini gerçek Chrome gibi yap
+                    Object.defineProperty(navigator, 'userAgent', {
+                        get: () => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    });
+
+                    // Language özelliğini ayarla
+                    Object.defineProperty(navigator, 'languages', {
+                        get: () => ['tr-TR', 'tr', 'en-US', 'en'],
+                    });
+
+                    // Platform özelliğini ayarla
+                    Object.defineProperty(navigator, 'platform', {
+                        get: () => 'Win32',
+                    });
+
+                    // Hardware concurrency özelliğini ayarla
+                    Object.defineProperty(navigator, 'hardwareConcurrency', {
+                        get: () => 8,
+                    });
+
+                    // Device memory özelliğini ayarla
+                    Object.defineProperty(navigator, 'deviceMemory', {
+                        get: () => 8,
+                    });
+
+                    // Connection özelliğini ayarla
+                    Object.defineProperty(navigator, 'connection', {
+                        get: () => ({
+                            effectiveType: '4g',
+                            rtt: 50,
+                            downlink: 10,
+                            saveData: false
+                        }),
+                    });
+                });
+        
                 
-                // Tam ekran yap
+                // Make fullscreen (safer)
                 try {
                     await page.evaluate(() => {
                         if (document.documentElement.requestFullscreen) {
@@ -80,12 +165,21 @@ class BrowserAnalyzer {
                             document.documentElement.msRequestFullscreen();
                         }
                     });
-                    console.log('Tam ekran modu aktif');
                 } catch (fullscreenError) {
-                    console.log('Tam ekran modu aktif değil, normal modda devam ediliyor');
+                    // Fullscreen failed, continue
                 }
-                
-                // Sayfa yüklendikten sonra ek veri topla
+
+                // Maximize browser
+                try {
+                    await page.evaluate(() => {
+                        window.moveTo(0, 0);
+                        window.resizeTo(screen.width, screen.height);
+                    });
+                } catch (maximizeError) {
+                    // Maximize failed, continue
+                }
+
+                // Collect additional data after page loads
                 await this.collectAdditionalData(page, sessionId);
                 
             } catch (navigationError) {
@@ -96,9 +190,9 @@ class BrowserAnalyzer {
             return sessionId;
             
         } catch (error) {
-            console.error('Browser analizi başlatma hatası:', error);
+            console.error('Browser analysis start error:', error);
             
-            // Hata durumunda temizlik yap
+            // Cleanup on error
             try {
                 const browser = this.browsers.get(sessionId);
                 if (browser) {
@@ -106,7 +200,7 @@ class BrowserAnalyzer {
                     this.browsers.delete(sessionId);
                 }
             } catch (cleanupError) {
-                console.error('Temizlik hatası:', cleanupError);
+                console.error('Cleanup error:', cleanupError);
             }
             
             throw error;
@@ -119,14 +213,74 @@ class BrowserAnalyzer {
                 case 'chrome':
                     return await chromium.launch({
                         headless: false,
-                        channel: 'chrome',
+                        // channel: 'chrome', // Sistem Chrome'u kullanmayı kapat
                         args: [
                             '--no-sandbox',
                             '--disable-setuid-sandbox',
                             '--disable-dev-shm-usage',
+                            '--disable-gpu',
+                            '--disable-software-rasterizer',
+                            '--disable-background-timer-throttling',
+                            '--disable-backgrounding-occluded-windows',
+                            '--disable-renderer-backgrounding',
+                            '--disable-features=TranslateUI',
+                            '--disable-ipc-flooding-protection',
                             '--start-maximized',
                             '--disable-web-security',
-                            '--kiosk' // Tam ekran modu
+                            '--disable-features=VizDisplayCompositor',
+                            '--enable-features=VaapiVideoDecoder',
+                            '--enable-accelerated-mjpeg-decode',
+                            '--enable-accelerated-video-decode',
+                            '--ignore-gpu-blocklist',
+                            '--enable-gpu-rasterization',
+                            '--enable-zero-copy',
+                            '--disable-blink-features=AutomationControlled',
+                            '--disable-automation',
+                            '--disable-extensions-except',
+                            '--disable-plugins-discovery',
+                            '--disable-default-apps',
+                            '--disable-sync',
+                            '--disable-translate',
+                            '--disable-background-networking',
+                            '--disable-background-timer-throttling',
+                            '--disable-client-side-phishing-detection',
+                            '--disable-component-update',
+                            '--disable-domain-reliability',
+                            '--disable-features=AudioServiceOutOfProcess',
+                            '--disable-hang-monitor',
+                            '--disable-ipc-flooding-protection',
+                            '--disable-prompt-on-repost',
+                            '--disable-renderer-backgrounding',
+                            '--disable-sync-preferences',
+                            '--force-color-profile=srgb',
+                            '--metrics-recording-only',
+                            '--no-first-run',
+                            '--password-store=basic',
+                            '--use-mock-keychain',
+                            '--hide-scrollbars',
+                            '--mute-audio',
+                            '--no-default-browser-check',
+                            '--no-pings',
+                            '--no-zygote',
+                            '--single-process',
+                            '--disable-dev-shm-usage',
+                            '--disable-accelerated-2d-canvas',
+                            '--no-zygote',
+                            '--disable-gpu-sandbox',
+                            '--disable-software-rasterizer',
+                            '--disable-background-timer-throttling',
+                            '--disable-backgrounding-occluded-windows',
+                            '--disable-renderer-backgrounding',
+                            '--disable-features=TranslateUI',
+                            '--disable-ipc-flooding-protection',
+                            '--disable-features=VizDisplayCompositor',
+                            '--enable-features=VaapiVideoDecoder',
+                            '--enable-accelerated-mjpeg-decode',
+                            '--enable-accelerated-video-decode',
+                            '--ignore-gpu-blocklist',
+                            '--enable-gpu-rasterization',
+                            '--enable-zero-copy',
+                            '--disable-blink-features=AutomationControlled'
                         ]
                     });
                 
@@ -136,7 +290,14 @@ class BrowserAnalyzer {
                         args: [
                             '--no-sandbox',
                             '--disable-dev-shm-usage',
-                            '--kiosk' // Tam ekran modu
+                            '--disable-background-timer-throttling',
+                            '--disable-backgrounding-occluded-windows',
+                            '--disable-renderer-backgrounding',
+                            '--enable-features=VaapiVideoDecoder',
+                            '--enable-accelerated-mjpeg-decode',
+                            '--enable-accelerated-video-decode',
+                            '--ignore-gpu-blocklist',
+                            '--enable-gpu-rasterization'
                         ]
                     });
                 
@@ -144,56 +305,231 @@ class BrowserAnalyzer {
                     return await webkit.launch({
                         headless: false,
                         args: [
-                            '--kiosk' // Tam ekran modu
+                            '--disable-background-timer-throttling',
+                            '--disable-backgrounding-occluded-windows',
+                            '--disable-renderer-backgrounding',
+                            '--enable-features=VaapiVideoDecoder',
+                            '--enable-accelerated-mjpeg-decode',
+                            '--enable-accelerated-video-decode',
+                            '--ignore-gpu-blocklist',
+                            '--enable-gpu-rasterization'
                         ]
                     });
                 
                 case 'edge':
                     return await chromium.launch({
                         headless: false,
-                        channel: 'msedge',
+                        // channel: 'msedge', // Sistem Edge'ini kullanmayı kapat
                         args: [
                             '--no-sandbox',
                             '--disable-setuid-sandbox',
                             '--disable-dev-shm-usage',
+                            '--disable-gpu',
+                            '--disable-software-rasterizer',
+                            '--disable-background-timer-throttling',
+                            '--disable-backgrounding-occluded-windows',
+                            '--disable-renderer-backgrounding',
+                            '--disable-features=TranslateUI',
+                            '--disable-ipc-flooding-protection',
                             '--start-maximized',
-                            '--kiosk' // Tam ekran modu
+                            '--disable-features=VizDisplayCompositor',
+                            '--enable-features=VaapiVideoDecoder',
+                            '--enable-accelerated-mjpeg-decode',
+                            '--enable-accelerated-video-decode',
+                            '--ignore-gpu-blocklist',
+                            '--enable-gpu-rasterization',
+                            '--enable-zero-copy',
+                            '--disable-blink-features=AutomationControlled'
                         ]
                     });
                 
                 default:
-                    throw new Error(`Desteklenmeyen tarayıcı: ${browserType}`);
+                    throw new Error(`Unsupported browser: ${browserType}`);
             }
         } catch (error) {
-            console.error(`${browserType} başlatma hatası:`, error);
+            console.error(`${browserType} launch error:`, error);
             
-            // Fallback olarak Chromium dene
-            if (browserType !== 'chrome') {
-                console.log('Fallback olarak Chromium deneniyor...');
-                return await chromium.launch({
-                    headless: false,
-                    args: [
-                        '--no-sandbox',
-                        '--disable-setuid-sandbox',
-                        '--disable-dev-shm-usage',
-                        '--start-maximized'
-                    ]
-                });
-            }
-            
-            throw error;
+            // Fallback to Chromium
+    
+            return await chromium.launch({
+                headless: false,
+                args: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-gpu',
+                    '--disable-software-rasterizer',
+                    '--disable-background-timer-throttling',
+                    '--disable-backgrounding-occluded-windows',
+                    '--disable-renderer-backgrounding',
+                    '--disable-features=TranslateUI',
+                    '--disable-ipc-flooding-protection',
+                    '--start-maximized',
+                    '--enable-features=VaapiVideoDecoder',
+                    '--enable-accelerated-mjpeg-decode',
+                    '--enable-accelerated-video-decode',
+                    '--ignore-gpu-blocklist',
+                    '--enable-gpu-rasterization',
+                    '--enable-zero-copy',
+                    '--disable-blink-features=AutomationControlled'
+                ]
+            });
         }
     }
 
     getUserAgent(browserType) {
         const userAgents = {
-            chrome: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            firefox: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0',
-            safari: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15',
-            edge: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.59'
+            chrome: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            firefox: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+            safari: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15',
+            edge: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0'
         };
         
         return userAgents[browserType.toLowerCase()] || userAgents.chrome;
+    }
+
+    async setupNetworkListeners(page) {
+        try {
+            // Request-response mapping için Map
+            const requestMap = new Map();
+            
+            // Network request listeners (Postman proxy benzeri)
+            page.on('request', request => {
+                const session = this.getSessionByPage(page);
+                if (session) {
+                    const requestId = request.url() + '_' + Date.now();
+                    const startTime = Date.now();
+                    
+                    const requestData = {
+                        id: requestId,
+                        url: request.url(),
+                        method: request.method(),
+                        headers: request.headers(),
+                        postData: request.postData(),
+                        resourceType: request.resourceType(),
+                        startTime: startTime,
+                        timestamp: startTime,
+                        frame: request.frame().name(),
+                        size: request.postData() ? request.postData().length : 0
+                    };
+                    
+                    // Request'i Map'e kaydet
+                    requestMap.set(request.url(), {
+                        request: requestData,
+                        startTime: startTime
+                    });
+                    
+                    if (!session.metrics.networkRequests) {
+                        session.metrics.networkRequests = [];
+                    }
+                    session.metrics.networkRequests.push(requestData);
+                    
+                    // Postman benzeri detaylı log
+                    
+                }
+            });
+
+            // Network response listeners (Postman proxy benzeri)
+            page.on('response', async response => {
+                const session = this.getSessionByPage(page);
+                if (session) {
+                    const endTime = Date.now();
+                    const requestInfo = requestMap.get(response.url());
+                    const duration = requestInfo ? endTime - requestInfo.startTime : 0;
+                    
+                    let responseBody = '';
+                    try {
+                        responseBody = await response.text();
+                    } catch (e) {
+                        responseBody = '[Binary or non-text response]';
+                    }
+                    
+                    const responseData = {
+                        url: response.url(),
+                        status: response.status(),
+                        statusText: response.statusText(),
+                        headers: response.headers(),
+                        endTime: endTime,
+                        duration: duration,
+                        timestamp: endTime,
+                        resourceType: response.request().resourceType(),
+                        responseSize: responseBody.length,
+                        responseBody: responseBody.substring(0, 1000) // İlk 1000 karakter
+                    };
+                    
+                    if (!session.metrics.networkResponses) {
+                        session.metrics.networkResponses = [];
+                    }
+                    session.metrics.networkResponses.push(responseData);
+                    
+                    // Postman benzeri detaylı log
+                    const statusColor = response.status() >= 200 && response.status() < 300 ? '✅' : '⚠️';
+                    console.log(`${statusColor} [${response.status()}] ${response.url()} (${duration}ms)`);
+                    console.log(`   📊 Response Size: ${responseBody.length} bytes`);
+                    console.log(`   ⏱️  Duration: ${duration}ms`);
+                    if (responseBody.length > 0 && responseBody.length < 500) {
+                        console.log(`   📄 Response: ${responseBody.substring(0, 200)}${responseBody.length > 200 ? '...' : ''}`);
+                    }
+                    
+                    // Request'i Map'ten temizle
+                    requestMap.delete(response.url());
+                }
+            });
+
+            // Network error listeners
+            page.on('requestfailed', request => {
+                const session = this.getSessionByPage(page);
+                if (session) {
+                    const endTime = Date.now();
+                    const requestInfo = requestMap.get(request.url());
+                    const duration = requestInfo ? endTime - requestInfo.startTime : 0;
+                    
+                    const errorData = {
+                        url: request.url(),
+                        method: request.method(),
+                        error: request.failure().errorText,
+                        endTime: endTime,
+                        duration: duration,
+                        timestamp: endTime,
+                        resourceType: request.resourceType()
+                    };
+                    
+                    if (!session.metrics.networkErrors) {
+                        session.metrics.networkErrors = [];
+                    }
+                    session.metrics.networkErrors.push(errorData);
+                    
+
+                    
+                    // Request'i Map'ten temizle
+                    requestMap.delete(request.url());
+                }
+            });
+
+            // Ek network event'leri
+            page.on('requestfinished', request => {
+                const session = this.getSessionByPage(page);
+                if (session) {
+                    // Request finished
+                }
+            });
+
+            // Console'dan network çağrılarını da yakala
+            page.on('console', msg => {
+                const session = this.getSessionByPage(page);
+                if (session) {
+                    const text = msg.text();
+                    if (text.includes('fetch') || text.includes('XMLHttpRequest') || 
+                        text.includes('api') || text.includes('http') || text.includes('POST') || text.includes('GET')) {
+                        console.log(`📝 Console Network: ${msg.type()} - ${text}`);
+                    }
+                }
+            });
+
+
+        } catch (error) {
+            console.error('Network listeners setup error:', error);
+        }
     }
 
     async setupPerformanceListeners(page) {
@@ -203,7 +539,7 @@ class BrowserAnalyzer {
         // Navigation events with detailed timing
         page.on('load', async () => {
             try {
-                console.log('Sayfa yüklendi, veri toplanıyor:', page.url());
+
                 
                 const performanceMetrics = await page.evaluate(() => {
                     const navigation = performance.getEntriesByType('navigation')[0];
@@ -298,16 +634,14 @@ class BrowserAnalyzer {
                     });
                 }
 
-                console.log('Sayfa yüklendi:', page.url(), 'Load time:', performanceMetrics.pageLoadTime, 'ms');
-                console.log('Toplanan kaynak sayısı:', performanceMetrics.resources ? performanceMetrics.resources.length : 0);
+
             } catch (error) {
-                console.error('Performance metrics toplama hatası:', error);
+                console.error('Performance metrics collection error:', error);
             }
         });
 
         // DOM content loaded event
         page.on('domcontentloaded', () => {
-            console.log('DOM yüklendi:', page.url());
             session.metrics.navigationEvents.push({
                 type: 'dom_content_loaded',
                 timestamp: Date.now(),
@@ -353,7 +687,7 @@ class BrowserAnalyzer {
                     
                     console.log('Navigation metrics:', frame.url(), 'Load time:', performanceMetrics.pageLoadTime, 'ms');
                 } catch (error) {
-                    console.error('Navigation metrics toplama hatası:', error);
+                    console.error('Navigation metrics collection error:', error);
                 }
             }
         });
@@ -423,7 +757,7 @@ class BrowserAnalyzer {
                     
                     console.log('SPA Navigation metrics:', url, 'Load time:', performanceMetrics.pageLoadTime, 'ms');
                 } catch (error) {
-                    console.error('SPA Navigation metrics toplama hatası:', error);
+                    console.error('SPA Navigation metrics collection error:', error);
                 }
             }
         });
@@ -614,7 +948,7 @@ class BrowserAnalyzer {
         if (!session) return;
 
         try {
-            // Sayfa yüklendikten sonra 1 saniye bekle ve veri topla
+            // Wait 1 second after page loads and collect data
             await page.waitForTimeout(1000);
 
             // Sayfanın hala aktif olup olmadığını kontrol et
@@ -785,7 +1119,25 @@ class BrowserAnalyzer {
                 startTime: session.startTime,
                 endTime: session.endTime,
                 duration: session.duration,
-                metrics: session.metrics
+                metrics: {
+                    ...session.metrics,
+                    networkSummary: {
+                        totalRequests: session.metrics.networkRequests ? session.metrics.networkRequests.length : 0,
+                        totalResponses: session.metrics.networkResponses ? session.metrics.networkResponses.length : 0,
+                        totalErrors: session.metrics.networkErrors ? session.metrics.networkErrors.length : 0,
+                        apiCalls: session.metrics.networkRequests ? session.metrics.networkRequests.filter(req => 
+                            req.url.includes('/api/') || req.url.includes('api.') || req.url.includes('rest.')
+                        ).length : 0,
+                        externalCalls: session.metrics.networkRequests ? session.metrics.networkRequests.filter(req => {
+                            try {
+                                const url = new URL(req.url);
+                                return !url.hostname.includes('localhost') && !url.hostname.includes('127.0.0.1');
+                            } catch {
+                                return true; // Invalid URL, consider as external
+                            }
+                        }).length : 0
+                    }
+                }
             };
 
             // Session'ı silmeden önce raporu oluştur
@@ -801,7 +1153,7 @@ class BrowserAnalyzer {
             return reportData;
             
         } catch (error) {
-            console.error('Analiz durdurma hatası:', error);
+            console.error('Analysis stop error:', error);
             throw error;
         }
     }
@@ -882,7 +1234,7 @@ class BrowserAnalyzer {
             return await this.generateReportWithData(reportData);
 
         } catch (error) {
-            console.error('Rapor oluşturma hatası:', error);
+            console.error('Report generation error:', error);
             throw error;
         }
     }
@@ -893,8 +1245,18 @@ class BrowserAnalyzer {
             const reportsDir = path.join(__dirname, '../../reports');
             await fs.mkdir(reportsDir, { recursive: true });
 
+            // Session data'yı hazırla
+            const sessionData = {
+                sessionId: reportData.sessionId,
+                browserType: reportData.browserType,
+                url: reportData.url,
+                startTime: reportData.startTime,
+                endTime: reportData.endTime,
+                duration: reportData.duration
+            };
+
             // Lighthouse CI HTML raporu oluştur
-            const htmlReportPath = await this.lighthouseCIReport.generateHTMLReport(reportData);
+            const htmlReportPath = await this.lighthouseCIReport.generateHTMLReport(sessionData, reportData);
 
             // PageSpeed Insights raporu oluştur (timeout ile)
             let pageSpeedReportPath = null;
@@ -920,7 +1282,7 @@ class BrowserAnalyzer {
             };
 
         } catch (error) {
-            console.error('Rapor oluşturma hatası:', error);
+            console.error('Report generation error:', error);
             throw error;
         }
     }
@@ -929,7 +1291,7 @@ class BrowserAnalyzer {
     getReportData(sessionId) {
         const session = this.sessions.get(sessionId);
         if (!session) {
-            throw new Error('Session bulunamadı');
+            throw new Error('Session not found');
         }
 
         return {
@@ -949,7 +1311,7 @@ class BrowserAnalyzer {
                 if (session.context) await session.context.close();
                 if (session.browser) await session.browser.close();
             } catch (error) {
-                console.error(`Session ${sessionId} kapatma hatası:`, error);
+                console.error(`Session ${sessionId} close error:`, error);
             }
         }
         

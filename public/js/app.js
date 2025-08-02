@@ -1,3 +1,13 @@
+// Prevent React DevTools errors
+if (typeof window !== 'undefined') {
+    window.addEventListener('error', function(e) {
+        if (e.message && e.message.includes('React')) {
+            e.preventDefault();
+            return false;
+        }
+    });
+}
+
 // Global variables
 let selectedBrowser = 'chrome';
 let currentAnalysis = null;
@@ -386,6 +396,9 @@ window.downloadReport = function(sessionId, type = 'html') {
         url = `/api/web/browser/download/${sessionId}?type=gemini`;
     }
     
+    // Add timestamp to prevent browser caching
+    url += `&t=${Date.now()}`;
+    
     window.open(url, '_blank');
 };
 
@@ -468,8 +481,8 @@ function displayReports(reports) {
                                     <div class="report-browser-badge">
                                         <i class="fas fa-browser"></i>
                                         <span>${report.browserType}</span>
-            </div>
-            </div>
+                                    </div>
+                                </div>
                                 <div class="report-timestamp">
                                     <i class="fas fa-calendar-alt"></i>
                                     <span>${new Date(report.startTime).toLocaleString('en-US', {
@@ -479,9 +492,13 @@ function displayReports(reports) {
                                         hour: '2-digit',
                                         minute: '2-digit'
                                     })}</span>
-            </div>
-        </div>
-                            
+                                </div>
+                                <div class="report-actions">
+                                    <button class="btn btn-danger btn-sm delete-btn" onclick="deleteReport('${report.id}')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </div>
+                            </div>
                             <div class="report-card-body">
                                 <div class="report-metrics-grid">
                                     <div class="metric-item">
@@ -516,22 +533,11 @@ function displayReports(reports) {
                                             <i class="fas fa-stopwatch"></i>
                                         </div>
                                         <div class="metric-content">
-                                            <div class="metric-value">${Math.round(report.duration / 1000)}s</div>
+                                            <div class="metric-value">${Math.round((report.duration || 0) / 1000)}s</div>
                                             <div class="metric-label">Duration</div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            
-                            <div class="report-card-actions">
-                                <button class="action-btn download-btn" onclick="downloadReport('${report.id}', 'html')" title="Download Report">
-                                    <i class="fas fa-download"></i>
-                                    <span>Download</span>
-                                </button>
-                                <button class="action-btn delete-btn" onclick="deleteReport('${report.id}')" title="Delete Report">
-                                    <i class="fas fa-trash"></i>
-                                    <span>Delete</span>
-                                </button>
                             </div>
                         </div>
                     `).join('')}

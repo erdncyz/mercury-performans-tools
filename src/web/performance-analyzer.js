@@ -40,7 +40,7 @@ class WebPerformanceAnalyzer {
             // Performance event listener'ları ekle
             await this.setupPerformanceListeners();
             
-            console.log('Web Performance Analyzer başlatıldı');
+            console.log('Web Performance Analyzer initialized');
             return true;
         } catch (error) {
             console.error('Web Performance Analyzer başlatılamadı:', error);

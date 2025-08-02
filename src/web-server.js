@@ -11,13 +11,14 @@ const WebPerformanceAnalyzer = require('./web/performance-analyzer');
 const InteractivePerformanceAnalyzer = require('./web/interactive-analyzer');
 
 class PerformanceMonitorServer {
-    constructor(port = 3000) {
+    constructor(port = process.env.PORT || 3000) {
         this.port = port;
+        this.host = process.env.HOST || '0.0.0.0';
         this.app = express();
         this.server = http.createServer(this.app);
         this.io = socketIo(this.server, {
             cors: {
-                origin: "*",
+                origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : "*",
                 methods: ["GET", "POST"]
             }
         });
@@ -31,41 +32,67 @@ class PerformanceMonitorServer {
     }
 
     setupMiddleware() {
+        // Trust proxy for network access
+        if (process.env.TRUST_PROXY === 'true') {
+            this.app.set('trust proxy', true);
+        }
+
         // Güvenlik middleware'leri - CSP ayarlarını düzenle
-        this.app.use(helmet({
-            contentSecurityPolicy: {
-                directives: {
-                    defaultSrc: ["'self'"],
-                    scriptSrc: [
-                        "'self'",
-                        "'unsafe-inline'",
-                        "'unsafe-eval'",
-                        "https://cdnjs.cloudflare.com",
-                        "https://cdn.jsdelivr.net",
-                        "https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.4/socket.io.js",
-                        "https://cdn.jsdelivr.net/npm/chart.js"
-                    ],
-                    scriptSrcAttr: ["'unsafe-inline'"],
-                    styleSrc: [
-                        "'self'",
-                        "'unsafe-inline'",
-                        "https://cdnjs.cloudflare.com",
-                        "https://fonts.googleapis.com"
-                    ],
-                    fontSrc: [
-                        "'self'",
-                        "https://fonts.gstatic.com",
-                        "https://cdnjs.cloudflare.com"
-                    ],
-                    imgSrc: ["'self'", "data:", "https:"],
-                    connectSrc: ["'self'", "ws:", "wss:"],
-                    frameSrc: ["'none'"],
-                    objectSrc: ["'none'"],
-                    upgradeInsecureRequests: []
+        if (process.env.ENABLE_HELMET !== 'false') {
+            this.app.use(helmet({
+                contentSecurityPolicy: {
+                    directives: {
+                        defaultSrc: ["'self'", "data:", "blob:"],
+                        scriptSrc: [
+                            "'self'",
+                            "'unsafe-inline'",
+                            "'unsafe-eval'",
+                            "https://cdnjs.cloudflare.com",
+                            "https://cdn.jsdelivr.net",
+                            "https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.4/socket.io.js",
+                            "https://cdn.jsdelivr.net/npm/chart.js",
+                            "data:",
+                            "blob:"
+                        ],
+                        scriptSrcAttr: ["'unsafe-inline'"],
+                        styleSrc: [
+                            "'self'",
+                            "'unsafe-inline'",
+                            "https://cdnjs.cloudflare.com",
+                            "https://fonts.googleapis.com",
+                            "data:",
+                            "blob:"
+                        ],
+                        fontSrc: [
+                            "'self'",
+                            "https://fonts.gstatic.com",
+                            "https://cdnjs.cloudflare.com",
+                            "data:",
+                            "blob:"
+                        ],
+                        imgSrc: ["'self'", "data:", "blob:", "https:"],
+                        connectSrc: ["'self'", "ws:", "wss:", "data:", "blob:"],
+                        frameSrc: ["'self'", "data:", "blob:"],
+                        objectSrc: ["'self'", "data:", "blob:"],
+                        mediaSrc: ["'self'", "data:", "blob:"],
+                        workerSrc: ["'self'", "data:", "blob:"],
+                        childSrc: ["'self'", "data:", "blob:"],
+                        upgradeInsecureRequests: []
+                    }
                 }
-            }
-        }));
-        this.app.use(cors());
+            }));
+        }
+
+        // CORS configuration
+        if (process.env.ENABLE_CORS !== 'false') {
+            const corsOptions = {
+                origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : "*",
+                credentials: true,
+                methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+                allowedHeaders: ['Content-Type', 'Authorization']
+            };
+            this.app.use(cors(corsOptions));
+        }
         
         // JSON parsing
         this.app.use(express.json());
@@ -75,10 +102,13 @@ class PerformanceMonitorServer {
         this.app.use(express.static(path.join(__dirname, '../public')));
         
         // Logging middleware
-        this.app.use((req, res, next) => {
-            console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-            next();
-        });
+        if (process.env.ENABLE_REQUEST_LOGGING !== 'false') {
+            this.app.use((req, res, next) => {
+                const clientIP = req.ip || req.connection.remoteAddress;
+                console.log(`${new Date().toISOString()} - ${clientIP} - ${req.method} ${req.path}`);
+                next();
+            });
+        }
     }
 
     setupRoutes() {
@@ -89,11 +119,15 @@ class PerformanceMonitorServer {
 
         // API Routes
         this.app.get('/api/status', (req, res) => {
+            const clientIP = req.ip || req.connection.remoteAddress;
             res.json({
                 status: 'running',
                 timestamp: new Date().toISOString(),
                 port: this.port,
-                webAnalyzer: this.webAnalyzer.browser ? 'initialized' : 'not_initialized'
+                host: this.host,
+                clientIP: clientIP,
+                webAnalyzer: this.webAnalyzer.browser ? 'initialized' : 'not_initialized',
+                environment: process.env.NODE_ENV || 'development'
             });
         });
 
@@ -128,7 +162,7 @@ class PerformanceMonitorServer {
                 res.json({
                     success: true,
                     sessionId: sessionId,
-                    message: `${browser} tarayıcısı açıldı. Siteyi gezinmeye başlayabilirsiniz.`
+                    message: `${browser} browser opened. You can start navigating the site.`
                 });
             } catch (error) {
                 console.error('Tarayıcı analizi başlatma hatası:', error);
@@ -200,24 +234,26 @@ class PerformanceMonitorServer {
                 const { sessionId } = req.params;
                 const { type = 'html' } = req.query;
                 
-                console.log('Download request:', { sessionId, type });
-                
                 const reportsDir = path.join(__dirname, '../reports');
-                console.log('Reports directory:', reportsDir);
-                
                 const files = await fs.readdir(reportsDir);
-                console.log('Available files:', files);
                 
                 let targetFile = null;
                 
                 if (type === 'pagespeed') {
-                    targetFile = files.find(file => file.includes('pagespeed-performance') && file.endsWith('.html'));
+                    // Find the most recent pagespeed report
+                    const pagespeedFiles = files
+                        .filter(file => file.includes('pagespeed-performance') && file.endsWith('.html'))
+                        .sort()
+                        .reverse();
+                    targetFile = pagespeedFiles[0];
                 } else {
-                    // Default to mercury performance report
-                    targetFile = files.find(file => file.includes('mercury-performance') && file.endsWith('.html'));
+                    // Find the most recent mercury performance report
+                    const mercuryFiles = files
+                        .filter(file => file.includes('mercury-performance') && file.endsWith('.html'))
+                        .sort()
+                        .reverse();
+                    targetFile = mercuryFiles[0];
                 }
-                
-                console.log('Target file:', targetFile);
                 
                 if (!targetFile) {
                     return res.status(404).json({ 
@@ -227,7 +263,13 @@ class PerformanceMonitorServer {
                 }
                 
                 const filePath = path.join(reportsDir, targetFile);
-                console.log('File path:', filePath);
+                
+                // Add cache control headers to prevent browser caching
+                res.set({
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                });
                 
                 res.download(filePath);
                 
@@ -370,7 +412,6 @@ class PerformanceMonitorServer {
                 for (const file of filesToDelete) {
                     const filePath = path.join(reportsDir, file);
                     await fs.unlink(filePath);
-                    console.log(`Deleted report file: ${file}`);
                 }
                 
                 res.json({
@@ -405,7 +446,6 @@ class PerformanceMonitorServer {
                 for (const file of files) {
                     const filePath = path.join(reportsDir, file);
                     await fs.unlink(filePath);
-                    console.log(`Deleted report file: ${file}`);
                 }
                 
                 res.json({
@@ -506,13 +546,29 @@ class PerformanceMonitorServer {
             
 
             
-            this.server.listen(this.port, () => {
-                console.log(`☿ Mercury Performance Tools Server ${this.port} portunda çalışıyor`);
-                console.log(`📊 Web UI: http://localhost:${this.port}`);
-                console.log(`🔧 API: http://localhost:${this.port}/api/status`);
+            this.server.listen(this.port, this.host, () => {
+                        console.log(`☿ Mercury Performance Tools Server running on ${this.host}:${this.port}`);
+        console.log(`📊 Web UI: http://localhost:${this.port}`);
+        console.log(`🌐 Network Access: http://${this.host}:${this.port}`);
+        console.log(`🔧 API: http://localhost:${this.port}/api/status`);
+                
+                // Show Network IP addresses
+                const os = require('os');
+                const networkInterfaces = os.networkInterfaces();
+                
+                console.log('\n🌍 Network IP Addresses:');
+                Object.keys(networkInterfaces).forEach((interfaceName) => {
+                    const interfaces = networkInterfaces[interfaceName];
+                    interfaces.forEach((iface) => {
+                        if (iface.family === 'IPv4' && !iface.internal) {
+                            console.log(`   ${interfaceName}: http://${iface.address}:${this.port}`);
+                        }
+                    });
+                });
+                console.log('');
             });
         } catch (error) {
-            console.error('Server başlatılamadı:', error);
+            console.error('Server failed to start:', error);
             throw error;
         }
     }
@@ -521,18 +577,18 @@ class PerformanceMonitorServer {
         try {
             await this.webAnalyzer.close();
             this.server.close(() => {
-                console.log('☿ Mercury Performance Tools Server kapatıldı');
+                console.log('☿ Mercury Performance Tools Server stopped');
             });
         } catch (error) {
-            console.error('Server kapatma hatası:', error);
+            console.error('Server shutdown error:', error);
         }
     }
 
     async startBrowserAnalysis(url, browser) {
         try {
-            console.log(`${browser} tarayıcısı ile analiz başlatılıyor:`, url);
+            console.log(`Starting analysis with ${browser} browser:`, url);
             
-            // Browser analyzer'ı başlat
+            // Initialize browser analyzer
             if (!this.browserAnalyzer) {
                 this.browserAnalyzer = new (require('./web/browser-analyzer'))();
             }
@@ -540,23 +596,23 @@ class PerformanceMonitorServer {
             const sessionId = await this.browserAnalyzer.startAnalysis(url, browser);
             return sessionId;
         } catch (error) {
-            console.error('Browser analizi başlatma hatası:', error);
+            console.error('Browser analysis start error:', error);
             throw error;
         }
     }
 
     async stopBrowserAnalysis(sessionId) {
         try {
-            console.log('Browser analizi durduruluyor:', sessionId);
+            console.log('Stopping browser analysis:', sessionId);
             
             if (!this.browserAnalyzer) {
-                throw new Error('Browser analyzer bulunamadı');
+                throw new Error('Browser analyzer not found');
             }
             
             const results = await this.browserAnalyzer.stopAnalysis(sessionId);
             return results;
         } catch (error) {
-            console.error('Browser analizi durdurma hatası:', error);
+            console.error('Browser analysis stop error:', error);
             throw error;
         }
     }
@@ -564,13 +620,13 @@ class PerformanceMonitorServer {
     async getBrowserAnalysisStatus(sessionId) {
         try {
             if (!this.browserAnalyzer) {
-                return { status: 'error', message: 'Browser analyzer bulunamadı' };
+                return { status: 'error', message: 'Browser analyzer not found' };
             }
             
             const status = await this.browserAnalyzer.getStatus(sessionId);
             return status;
         } catch (error) {
-            console.error('Browser analizi durumu hatası:', error);
+            console.error('Browser analysis status error:', error);
             return { status: 'error', message: error.message };
         }
     }
@@ -578,13 +634,13 @@ class PerformanceMonitorServer {
     async getBrowserAnalysisReport(sessionId) {
         try {
             if (!this.browserAnalyzer) {
-                throw new Error('Browser analyzer bulunamadı');
+                throw new Error('Browser analyzer not found');
             }
             
             const report = await this.browserAnalyzer.getReport(sessionId);
             return report;
         } catch (error) {
-            console.error('Browser analizi raporu hatası:', error);
+            console.error('Browser analysis report error:', error);
             throw error;
         }
     }
@@ -592,26 +648,26 @@ class PerformanceMonitorServer {
     async generateBrowserAnalysisReport(sessionId) {
         try {
             if (!this.browserAnalyzer) {
-                throw new Error('Browser analyzer bulunamadı');
+                throw new Error('Browser analyzer not found');
             }
             
             const reportPath = await this.browserAnalyzer.generateReport(sessionId);
             return reportPath;
         } catch (error) {
-            console.error('Browser analizi raporu oluşturma hatası:', error);
+            console.error('Browser analysis report generation error:', error);
             throw error;
         }
     }
 }
 
-// Eğer bu dosya doğrudan çalıştırılırsa
+// If this file is run directly
 if (require.main === module) {
     const server = new PerformanceMonitorServer();
     server.start();
 
     // Graceful shutdown
     process.on('SIGINT', async () => {
-        console.log('\n☿ Mercury Performance Tools Server kapatılıyor...');
+        console.log('\n☿ Mercury Performance Tools Server shutting down...');
         await server.stop();
         process.exit(0);
     });
